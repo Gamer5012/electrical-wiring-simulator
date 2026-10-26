@@ -16,8 +16,8 @@ class MobileComponentManager extends ComponentManager {
   }
 
   setCanvasDimensions(w, h) {
-    this.canvasW = w;
-    this.canvasH = h;
+    this.canvasW = Math.max(320, w);
+    this.canvasH = Math.max(680, h);
     this.initModeLayout(this.activeMode);
   }
 
@@ -29,17 +29,17 @@ class MobileComponentManager extends ComponentManager {
     this.addComponent({
       id: 'q1',
       type: 'disjoncteur',
-      x: cx - 70,
-      y: 20,
-      width: 140,
-      height: 200,
+      x: cx - 65,
+      y: 15,
+      width: 130,
+      height: 180,
       labelFr: 'Disjoncteur 10A',
       labelAr: 'قاطع الدارة 10A',
       state: { isOn: true },
       terminals: [
-        { id: 'q1_L', name: 'Disjoncteur: Borne L', code: 'L', xOffset: 45, yOffset: 185, dir: 'bottom', type: 'phase' },
-        { id: 'q1_N', name: 'Disjoncteur: Borne N', code: 'N', xOffset: 95, yOffset: 185, dir: 'bottom', type: 'neutre' },
-        { id: 'q1_PE', name: 'Barrette PE (Terre)', code: 'PE', xOffset: 70, yOffset: 25, dir: 'top', type: 'terre' }
+        { id: 'q1_L', name: 'Disjoncteur: Borne L', code: 'L', xOffset: 40, yOffset: 165, dir: 'bottom', type: 'phase' },
+        { id: 'q1_N', name: 'Disjoncteur: Borne N', code: 'N', xOffset: 90, yOffset: 165, dir: 'bottom', type: 'neutre' },
+        { id: 'q1_PE', name: 'Barrette PE (Terre)', code: 'PE', xOffset: 65, yOffset: 25, dir: 'top', type: 'terre' }
       ]
     });
 
@@ -47,16 +47,16 @@ class MobileComponentManager extends ComponentManager {
     this.addComponent({
       id: 'sw1',
       type: 'switch_sa',
-      x: cx - 70,
-      y: 250,
-      width: 140,
-      height: 160,
+      x: cx - 65,
+      y: 225,
+      width: 130,
+      height: 145,
       labelFr: 'Interrupteur SA',
       labelAr: 'قاطعة بسيطة (SA)',
       state: { isClosed: false },
       terminals: [
-        { id: 'sw1_L', name: 'Interrupteur: Borne L', code: 'L', xOffset: 45, yOffset: 145, dir: 'bottom', type: 'phase' },
-        { id: 'sw1_1', name: 'Interrupteur: Borne 1', code: '1', xOffset: 95, yOffset: 145, dir: 'bottom', type: 'retour' }
+        { id: 'sw1_L', name: 'Interrupteur: Borne L', code: 'L', xOffset: 40, yOffset: 130, dir: 'bottom', type: 'phase' },
+        { id: 'sw1_1', name: 'Interrupteur: Borne 1', code: '1', xOffset: 90, yOffset: 130, dir: 'bottom', type: 'retour' }
       ]
     });
 
@@ -64,17 +64,17 @@ class MobileComponentManager extends ComponentManager {
     this.addComponent({
       id: 'e1',
       type: 'lamp',
-      x: cx - 80,
-      y: 440,
-      width: 160,
-      height: 200,
+      x: cx - 75,
+      y: 415,
+      width: 150,
+      height: 175,
       labelFr: 'Lampe E1',
       labelAr: 'المصباح E1',
       state: { isLit: false },
       terminals: [
-        { id: 'e1_L', name: 'Lampe E1: Borne L', code: 'L', xOffset: 30, yOffset: 175, dir: 'bottom', type: 'retour' },
-        { id: 'e1_N', name: 'Lampe E1: Borne N', code: 'N', xOffset: 80, yOffset: 175, dir: 'bottom', type: 'neutre' },
-        { id: 'e1_PE', name: 'Lampe E1: Borne PE', code: 'PE', xOffset: 130, yOffset: 175, dir: 'bottom', type: 'terre' }
+        { id: 'e1_L', name: 'Lampe E1: Borne L', code: 'L', xOffset: 28, yOffset: 155, dir: 'bottom', type: 'retour' },
+        { id: 'e1_N', name: 'Lampe E1: Borne N', code: 'N', xOffset: 75, yOffset: 155, dir: 'bottom', type: 'neutre' },
+        { id: 'e1_PE', name: 'Lampe E1: Borne PE', code: 'PE', xOffset: 122, yOffset: 155, dir: 'bottom', type: 'terre' }
       ]
     });
 
@@ -89,39 +89,39 @@ class MobileComponentManager extends ComponentManager {
     this.addComponent({
       id: 'q1',
       type: 'disjoncteur',
-      x: cx - 70,
+      x: cx - 65,
       y: 15,
-      width: 140,
-      height: 195,
+      width: 130,
+      height: 180,
       labelFr: 'Disjoncteur 10A',
       labelAr: 'قاطع الدارة 10A',
       state: { isOn: true },
       terminals: [
-        { id: 'q1_L', name: 'Disjoncteur: Borne L', code: 'L', xOffset: 45, yOffset: 180, dir: 'bottom', type: 'phase' },
-        { id: 'q1_N', name: 'Disjoncteur: Borne N', code: 'N', xOffset: 95, yOffset: 180, dir: 'bottom', type: 'neutre' },
-        { id: 'q1_PE', name: 'Barrette PE (Terre)', code: 'PE', xOffset: 70, yOffset: 25, dir: 'top', type: 'terre' }
+        { id: 'q1_L', name: 'Disjoncteur: Borne L', code: 'L', xOffset: 40, yOffset: 165, dir: 'bottom', type: 'phase' },
+        { id: 'q1_N', name: 'Disjoncteur: Borne N', code: 'N', xOffset: 90, yOffset: 165, dir: 'bottom', type: 'neutre' },
+        { id: 'q1_PE', name: 'Barrette PE (Terre)', code: 'PE', xOffset: 65, yOffset: 25, dir: 'top', type: 'terre' }
       ]
     });
 
-    // Switch width on mobile: approx 160px each with 10px margin
-    const swW = Math.min(165, Math.floor((this.canvasW - 40) / 2));
-    const sw1X = Math.floor(this.canvasW / 2) - swW - 8;
-    const sw2X = Math.floor(this.canvasW / 2) + 8;
+    // Switch width on mobile: 2 separate switches side by side
+    const swW = Math.min(160, Math.floor((this.canvasW - 32) / 2));
+    const sw1X = cx - swW - 6;
+    const sw2X = cx + 6;
 
     // Separate Switch 1 (Controls E1 + E2 parallel)
     this.addComponent({
       id: 'sw_da1',
       type: 'switch_sa',
       x: sw1X,
-      y: 235,
+      y: 225,
       width: swW,
-      height: 160,
+      height: 145,
       labelFr: 'Interrupteur 1',
       labelAr: 'قاطعة 1 (E1+E2)',
       state: { isClosed: false },
       terminals: [
-        { id: 'da1_L', name: 'Interrupteur 1: L', code: 'L', xOffset: 45, yOffset: 145, dir: 'bottom', type: 'phase' },
-        { id: 'da1_1', name: 'Interrupteur 1: 1', code: '1', xOffset: swW - 45, yOffset: 145, dir: 'bottom', type: 'retour' }
+        { id: 'da1_L', name: 'Interrupteur 1: L', code: 'L', xOffset: 38, yOffset: 130, dir: 'bottom', type: 'phase' },
+        { id: 'da1_1', name: 'Interrupteur 1: 1', code: '1', xOffset: swW - 38, yOffset: 130, dir: 'bottom', type: 'retour' }
       ]
     });
 
@@ -130,20 +130,20 @@ class MobileComponentManager extends ComponentManager {
       id: 'sw_da2',
       type: 'switch_sa',
       x: sw2X,
-      y: 235,
+      y: 225,
       width: swW,
-      height: 160,
+      height: 145,
       labelFr: 'Interrupteur 2',
       labelAr: 'قاطعة 2 (E3)',
       state: { isClosed: false },
       terminals: [
-        { id: 'da2_L', name: 'Interrupteur 2: L', code: 'L', xOffset: 45, yOffset: 145, dir: 'bottom', type: 'phase' },
-        { id: 'da2_2', name: 'Interrupteur 2: 2', code: '2', xOffset: swW - 45, yOffset: 145, dir: 'bottom', type: 'retour' }
+        { id: 'da2_L', name: 'Interrupteur 2: L', code: 'L', xOffset: 38, yOffset: 130, dir: 'bottom', type: 'phase' },
+        { id: 'da2_2', name: 'Interrupteur 2: 2', code: '2', xOffset: swW - 38, yOffset: 130, dir: 'bottom', type: 'retour' }
       ]
     });
 
     // 3 Lamps across bottom: E1, E2, E3
-    const lampW = Math.min(118, Math.floor((this.canvasW - 24) / 3));
+    const lampW = Math.min(115, Math.floor((this.canvasW - 24) / 3));
     const gap = Math.floor((this.canvasW - (lampW * 3)) / 4);
 
     // Lampe E1
@@ -151,16 +151,16 @@ class MobileComponentManager extends ComponentManager {
       id: 'e1',
       type: 'lamp',
       x: gap,
-      y: 425,
+      y: 415,
       width: lampW,
-      height: 195,
+      height: 175,
       labelFr: 'Lampe E1',
       labelAr: 'المصباح E1',
       state: { isLit: false },
       terminals: [
-        { id: 'e1_L', name: 'E1: Borne L', code: 'L', xOffset: 20, yOffset: 175, dir: 'bottom', type: 'retour' },
-        { id: 'e1_N', name: 'E1: Borne N', code: 'N', xOffset: Math.floor(lampW / 2), yOffset: 175, dir: 'bottom', type: 'neutre' },
-        { id: 'e1_PE', name: 'E1: Borne PE', code: 'PE', xOffset: lampW - 20, yOffset: 175, dir: 'bottom', type: 'terre' }
+        { id: 'e1_L', name: 'E1: Borne L', code: 'L', xOffset: 18, yOffset: 155, dir: 'bottom', type: 'retour' },
+        { id: 'e1_N', name: 'E1: Borne N', code: 'N', xOffset: Math.floor(lampW / 2), yOffset: 155, dir: 'bottom', type: 'neutre' },
+        { id: 'e1_PE', name: 'E1: Borne PE', code: 'PE', xOffset: lampW - 18, yOffset: 155, dir: 'bottom', type: 'terre' }
       ]
     });
 
@@ -169,16 +169,16 @@ class MobileComponentManager extends ComponentManager {
       id: 'e2',
       type: 'lamp',
       x: gap * 2 + lampW,
-      y: 425,
+      y: 415,
       width: lampW,
-      height: 195,
+      height: 175,
       labelFr: 'Lampe E2',
       labelAr: 'المصباح E2',
       state: { isLit: false },
       terminals: [
-        { id: 'e2_L', name: 'E2: Borne L', code: 'L', xOffset: 20, yOffset: 175, dir: 'bottom', type: 'retour' },
-        { id: 'e2_N', name: 'E2: Borne N', code: 'N', xOffset: Math.floor(lampW / 2), yOffset: 175, dir: 'bottom', type: 'neutre' },
-        { id: 'e2_PE', name: 'E2: Borne PE', code: 'PE', xOffset: lampW - 20, yOffset: 175, dir: 'bottom', type: 'terre' }
+        { id: 'e2_L', name: 'E2: Borne L', code: 'L', xOffset: 18, yOffset: 155, dir: 'bottom', type: 'retour' },
+        { id: 'e2_N', name: 'E2: Borne N', code: 'N', xOffset: Math.floor(lampW / 2), yOffset: 155, dir: 'bottom', type: 'neutre' },
+        { id: 'e2_PE', name: 'E2: Borne PE', code: 'PE', xOffset: lampW - 18, yOffset: 155, dir: 'bottom', type: 'terre' }
       ]
     });
 
@@ -187,16 +187,16 @@ class MobileComponentManager extends ComponentManager {
       id: 'e3',
       type: 'lamp',
       x: gap * 3 + lampW * 2,
-      y: 425,
+      y: 415,
       width: lampW,
-      height: 195,
+      height: 175,
       labelFr: 'Lampe E3',
       labelAr: 'المصباح E3',
       state: { isLit: false },
       terminals: [
-        { id: 'e3_L', name: 'E3: Borne L', code: 'L', xOffset: 20, yOffset: 175, dir: 'bottom', type: 'retour' },
-        { id: 'e3_N', name: 'E3: Borne N', code: 'N', xOffset: Math.floor(lampW / 2), yOffset: 175, dir: 'bottom', type: 'neutre' },
-        { id: 'e3_PE', name: 'E3: Borne PE', code: 'PE', xOffset: lampW - 20, yOffset: 175, dir: 'bottom', type: 'terre' }
+        { id: 'e3_L', name: 'E3: Borne L', code: 'L', xOffset: 18, yOffset: 155, dir: 'bottom', type: 'retour' },
+        { id: 'e3_N', name: 'E3: Borne N', code: 'N', xOffset: Math.floor(lampW / 2), yOffset: 155, dir: 'bottom', type: 'neutre' },
+        { id: 'e3_PE', name: 'E3: Borne PE', code: 'PE', xOffset: lampW - 18, yOffset: 155, dir: 'bottom', type: 'terre' }
       ]
     });
 
@@ -212,23 +212,23 @@ class MobileComponentManager extends ComponentManager {
     this.addComponent({
       id: 'q1',
       type: 'disjoncteur',
-      x: cx - 70,
+      x: cx - 65,
       y: 15,
-      width: 140,
-      height: 195,
+      width: 130,
+      height: 180,
       labelFr: 'Disjoncteur 10A',
       labelAr: 'قاطع الدارة 10A',
       state: { isOn: true },
       terminals: [
-        { id: 'q1_L', name: 'Disjoncteur: Borne L', code: 'L', xOffset: 45, yOffset: 180, dir: 'bottom', type: 'phase' },
-        { id: 'q1_N', name: 'Disjoncteur: Borne N', code: 'N', xOffset: 95, yOffset: 180, dir: 'bottom', type: 'neutre' },
-        { id: 'q1_PE', name: 'Barrette PE (Terre)', code: 'PE', xOffset: 70, yOffset: 25, dir: 'top', type: 'terre' }
+        { id: 'q1_L', name: 'Disjoncteur: Borne L', code: 'L', xOffset: 40, yOffset: 165, dir: 'bottom', type: 'phase' },
+        { id: 'q1_N', name: 'Disjoncteur: Borne N', code: 'N', xOffset: 90, yOffset: 165, dir: 'bottom', type: 'neutre' },
+        { id: 'q1_PE', name: 'Barrette PE (Terre)', code: 'PE', xOffset: 65, yOffset: 25, dir: 'top', type: 'terre' }
       ]
     });
 
-    const swW = Math.min(165, Math.floor((this.canvasW - 40) / 2));
-    const sw1X = Math.floor(this.canvasW / 2) - swW - 8;
-    const sw2X = Math.floor(this.canvasW / 2) + 8;
+    const swW = Math.min(160, Math.floor((this.canvasW - 32) / 2));
+    const sw1X = cx - swW - 6;
+    const sw2X = cx + 6;
 
     let switchType = 'switch_vv';
     let sw1Title = 'Interrupteur VV1';
@@ -253,16 +253,16 @@ class MobileComponentManager extends ComponentManager {
       id: 'sw_vv1',
       type: switchType,
       x: sw1X,
-      y: 235,
+      y: 225,
       width: swW,
-      height: 175,
+      height: 155,
       labelFr: sw1Title,
       labelAr: variant === 'US' ? 'مفتاح 1 (US)' : 'قاطعة ذهاب/إياب 1',
       state: { position: 1 },
       terminals: [
         { id: 'vv1_L', name: 'VV1: L', code: 'L', xOffset: Math.floor(swW / 2), yOffset: 25, dir: 'top', type: 'phase' },
-        { id: 'vv1_1', name: `VV1: ${term1_1_code}`, code: term1_1_code, xOffset: 35, yOffset: 155, dir: 'bottom', type: 'navette' },
-        { id: 'vv1_2', name: `VV1: ${term1_2_code}`, code: term1_2_code, xOffset: swW - 35, yOffset: 155, dir: 'bottom', type: 'navette' }
+        { id: 'vv1_1', name: `VV1: ${term1_1_code}`, code: term1_1_code, xOffset: 32, yOffset: 140, dir: 'bottom', type: 'navette' },
+        { id: 'vv1_2', name: `VV1: ${term1_2_code}`, code: term1_2_code, xOffset: swW - 32, yOffset: 140, dir: 'bottom', type: 'navette' }
       ]
     });
 
@@ -271,38 +271,38 @@ class MobileComponentManager extends ComponentManager {
       id: 'sw_vv2',
       type: switchType,
       x: sw2X,
-      y: 235,
+      y: 225,
       width: swW,
-      height: 175,
+      height: 155,
       labelFr: sw2Title,
       labelAr: variant === 'US' ? 'مفتاح 2 (US)' : 'قاطعة ذهاب/إياب 2',
       state: { position: 1 },
       terminals: [
-        { id: 'vv2_1', name: `VV2: ${term2_1_code}`, code: term2_1_code, xOffset: 35, yOffset: 25, dir: 'top', type: 'navette' },
-        { id: 'vv2_2', name: `VV2: ${term2_2_code}`, code: term2_2_code, xOffset: swW - 35, yOffset: 25, dir: 'top', type: 'navette' },
-        { id: 'vv2_L', name: 'VV2: L', code: 'L', xOffset: Math.floor(swW / 2), yOffset: 155, dir: 'bottom', type: 'retour' }
+        { id: 'vv2_1', name: `VV2: ${term2_1_code}`, code: term2_1_code, xOffset: 32, yOffset: 25, dir: 'top', type: 'navette' },
+        { id: 'vv2_2', name: `VV2: ${term2_2_code}`, code: term2_2_code, xOffset: swW - 32, yOffset: 25, dir: 'top', type: 'navette' },
+        { id: 'vv2_L', name: 'VV2: L', code: 'L', xOffset: Math.floor(swW / 2), yOffset: 140, dir: 'bottom', type: 'retour' }
       ]
     });
 
     // 2 Lamps at Bottom
-    const lampW = Math.min(160, Math.floor((this.canvasW - 40) / 2));
-    const lamp1X = Math.floor(this.canvasW / 2) - lampW - 8;
-    const lamp2X = Math.floor(this.canvasW / 2) + 8;
+    const lampW = Math.min(155, Math.floor((this.canvasW - 32) / 2));
+    const lamp1X = cx - lampW - 6;
+    const lamp2X = cx + 6;
 
     this.addComponent({
       id: 'e1',
       type: 'lamp',
       x: lamp1X,
-      y: 435,
+      y: 415,
       width: lampW,
-      height: 200,
+      height: 180,
       labelFr: 'Lampe E1',
       labelAr: 'المصباح E1',
       state: { isLit: false },
       terminals: [
-        { id: 'e1_L', name: 'E1: L', code: 'L', xOffset: 25, yOffset: 175, dir: 'bottom', type: 'retour' },
-        { id: 'e1_N', name: 'E1: N', code: 'N', xOffset: Math.floor(lampW / 2), yOffset: 175, dir: 'bottom', type: 'neutre' },
-        { id: 'e1_PE', name: 'E1: PE', code: 'PE', xOffset: lampW - 25, yOffset: 175, dir: 'bottom', type: 'terre' }
+        { id: 'e1_L', name: 'E1: L', code: 'L', xOffset: 24, yOffset: 160, dir: 'bottom', type: 'retour' },
+        { id: 'e1_N', name: 'E1: N', code: 'N', xOffset: Math.floor(lampW / 2), yOffset: 160, dir: 'bottom', type: 'neutre' },
+        { id: 'e1_PE', name: 'E1: PE', code: 'PE', xOffset: lampW - 24, yOffset: 160, dir: 'bottom', type: 'terre' }
       ]
     });
 
@@ -310,16 +310,16 @@ class MobileComponentManager extends ComponentManager {
       id: 'e2',
       type: 'lamp',
       x: lamp2X,
-      y: 435,
+      y: 415,
       width: lampW,
-      height: 200,
+      height: 180,
       labelFr: 'Lampe E2',
       labelAr: 'المصباح E2 (توازي)',
       state: { isLit: false },
       terminals: [
-        { id: 'e2_L', name: 'E2: L', code: 'L', xOffset: 25, yOffset: 175, dir: 'bottom', type: 'retour' },
-        { id: 'e2_N', name: 'E2: N', code: 'N', xOffset: Math.floor(lampW / 2), yOffset: 175, dir: 'bottom', type: 'neutre' },
-        { id: 'e2_PE', name: 'E2: PE', code: 'PE', xOffset: lampW - 25, yOffset: 175, dir: 'bottom', type: 'terre' }
+        { id: 'e2_L', name: 'E2: L', code: 'L', xOffset: 24, yOffset: 160, dir: 'bottom', type: 'retour' },
+        { id: 'e2_N', name: 'E2: N', code: 'N', xOffset: Math.floor(lampW / 2), yOffset: 160, dir: 'bottom', type: 'neutre' },
+        { id: 'e2_PE', name: 'E2: PE', code: 'PE', xOffset: lampW - 24, yOffset: 160, dir: 'bottom', type: 'terre' }
       ]
     });
 
@@ -331,9 +331,9 @@ class MobileComponentManager extends ComponentManager {
     const cx = Math.floor(this.canvasW / 2);
 
     // Top: Disjoncteur and Télérupteur side by side
-    const topW = Math.min(160, Math.floor((this.canvasW - 40) / 2));
-    const q1X = Math.floor(this.canvasW / 2) - topW - 8;
-    const tl1X = Math.floor(this.canvasW / 2) + 8;
+    const topW = Math.min(155, Math.floor((this.canvasW - 32) / 2));
+    const q1X = cx - topW - 6;
+    const tl1X = cx + 6;
 
     this.addComponent({
       id: 'q1',
@@ -341,13 +341,13 @@ class MobileComponentManager extends ComponentManager {
       x: q1X,
       y: 15,
       width: topW,
-      height: 195,
+      height: 180,
       labelFr: 'Disjoncteur 10A',
       labelAr: 'قاطع الدارة 10A',
       state: { isOn: true },
       terminals: [
-        { id: 'q1_L', name: 'Disjoncteur: L', code: 'L', xOffset: 35, yOffset: 180, dir: 'bottom', type: 'phase' },
-        { id: 'q1_N', name: 'Disjoncteur: N', code: 'N', xOffset: topW - 35, yOffset: 180, dir: 'bottom', type: 'neutre' },
+        { id: 'q1_L', name: 'Disjoncteur: L', code: 'L', xOffset: 32, yOffset: 165, dir: 'bottom', type: 'phase' },
+        { id: 'q1_N', name: 'Disjoncteur: N', code: 'N', xOffset: topW - 32, yOffset: 165, dir: 'bottom', type: 'neutre' },
         { id: 'q1_PE', name: 'Barrette PE', code: 'PE', xOffset: Math.floor(topW / 2), yOffset: 25, dir: 'top', type: 'terre' }
       ]
     });
@@ -358,35 +358,35 @@ class MobileComponentManager extends ComponentManager {
       x: tl1X,
       y: 15,
       width: topW,
-      height: 195,
+      height: 180,
       labelFr: 'Télérupteur 4 Fils',
       labelAr: 'مرحل نبضي (TL)',
       state: { isClosed: false },
       terminals: [
-        { id: 'tl_1', name: 'TL: 1', code: '1', xOffset: 35, yOffset: 25, dir: 'top', type: 'phase' },
-        { id: 'tl_A1', name: 'TL: A1', code: 'A1', xOffset: topW - 35, yOffset: 25, dir: 'top', type: 'navette' },
-        { id: 'tl_2', name: 'TL: 2', code: '2', xOffset: 35, yOffset: 180, dir: 'bottom', type: 'retour' },
-        { id: 'tl_A2', name: 'TL: A2', code: 'A2', xOffset: topW - 35, yOffset: 180, dir: 'bottom', type: 'neutre' }
+        { id: 'tl_1', name: 'TL: 1', code: '1', xOffset: 32, yOffset: 25, dir: 'top', type: 'phase' },
+        { id: 'tl_A1', name: 'TL: A1', code: 'A1', xOffset: topW - 32, yOffset: 25, dir: 'top', type: 'navette' },
+        { id: 'tl_2', name: 'TL: 2', code: '2', xOffset: 32, yOffset: 165, dir: 'bottom', type: 'retour' },
+        { id: 'tl_A2', name: 'TL: A2', code: 'A2', xOffset: topW - 32, yOffset: 165, dir: 'bottom', type: 'neutre' }
       ]
     });
 
     // Middle: 3 Push Buttons in a horizontal row
-    const bpW = Math.min(115, Math.floor((this.canvasW - 24) / 3));
+    const bpW = Math.min(110, Math.floor((this.canvasW - 24) / 3));
     const gap = Math.floor((this.canvasW - (bpW * 3)) / 4);
 
     this.addComponent({
       id: 'bp1',
       type: 'push_button',
       x: gap,
-      y: 240,
+      y: 230,
       width: bpW,
       height: 140,
       labelFr: 'BP1 (Entrée)',
       labelAr: 'زر 1 (مدخل)',
       state: { isPressed: false },
       terminals: [
-        { id: 'bp1_L', name: 'BP1: L', code: 'L', xOffset: 25, yOffset: 120, dir: 'bottom', type: 'phase' },
-        { id: 'bp1_out', name: 'BP1: Sortie', code: '⭳', xOffset: bpW - 25, yOffset: 120, dir: 'bottom', type: 'navette' }
+        { id: 'bp1_L', name: 'BP1: L', code: 'L', xOffset: 22, yOffset: 120, dir: 'bottom', type: 'phase' },
+        { id: 'bp1_out', name: 'BP1: Sortie', code: '⭳', xOffset: bpW - 22, yOffset: 120, dir: 'bottom', type: 'navette' }
       ]
     });
 
@@ -394,15 +394,15 @@ class MobileComponentManager extends ComponentManager {
       id: 'bp2',
       type: 'push_button',
       x: gap * 2 + bpW,
-      y: 240,
+      y: 230,
       width: bpW,
       height: 140,
       labelFr: 'BP2 (Couloir)',
       labelAr: 'زر 2 (ممر)',
       state: { isPressed: false },
       terminals: [
-        { id: 'bp2_L', name: 'BP2: L', code: 'L', xOffset: 25, yOffset: 120, dir: 'bottom', type: 'phase' },
-        { id: 'bp2_out', name: 'BP2: Sortie', code: '⭳', xOffset: bpW - 25, yOffset: 120, dir: 'bottom', type: 'navette' }
+        { id: 'bp2_L', name: 'BP2: L', code: 'L', xOffset: 22, yOffset: 120, dir: 'bottom', type: 'phase' },
+        { id: 'bp2_out', name: 'BP2: Sortie', code: '⭳', xOffset: bpW - 22, yOffset: 120, dir: 'bottom', type: 'navette' }
       ]
     });
 
@@ -410,37 +410,37 @@ class MobileComponentManager extends ComponentManager {
       id: 'bp3',
       type: 'push_button',
       x: gap * 3 + bpW * 2,
-      y: 240,
+      y: 230,
       width: bpW,
       height: 140,
       labelFr: 'BP3 (Escalier)',
       labelAr: 'زر 3 (درج)',
       state: { isPressed: false },
       terminals: [
-        { id: 'bp3_L', name: 'BP3: L', code: 'L', xOffset: 25, yOffset: 120, dir: 'bottom', type: 'phase' },
-        { id: 'bp3_out', name: 'BP3: Sortie', code: '⭳', xOffset: bpW - 25, yOffset: 120, dir: 'bottom', type: 'navette' }
+        { id: 'bp3_L', name: 'BP3: L', code: 'L', xOffset: 22, yOffset: 120, dir: 'bottom', type: 'phase' },
+        { id: 'bp3_out', name: 'BP3: Sortie', code: '⭳', xOffset: bpW - 22, yOffset: 120, dir: 'bottom', type: 'navette' }
       ]
     });
 
     // Bottom: 2 Lamps (E1 and E2 in parallel)
-    const lampW = Math.min(160, Math.floor((this.canvasW - 40) / 2));
-    const lamp1X = Math.floor(this.canvasW / 2) - lampW - 8;
-    const lamp2X = Math.floor(this.canvasW / 2) + 8;
+    const lampW = Math.min(155, Math.floor((this.canvasW - 32) / 2));
+    const lamp1X = cx - lampW - 6;
+    const lamp2X = cx + 6;
 
     this.addComponent({
       id: 'e1',
       type: 'lamp',
       x: lamp1X,
-      y: 420,
+      y: 415,
       width: lampW,
-      height: 195,
+      height: 180,
       labelFr: 'Lampe E1',
       labelAr: 'المصباح E1',
       state: { isLit: false },
       terminals: [
-        { id: 'e1_L', name: 'E1: L', code: 'L', xOffset: 25, yOffset: 175, dir: 'bottom', type: 'retour' },
-        { id: 'e1_N', name: 'E1: N', code: 'N', xOffset: Math.floor(lampW / 2), yOffset: 175, dir: 'bottom', type: 'neutre' },
-        { id: 'e1_PE', name: 'E1: PE', code: 'PE', xOffset: lampW - 25, yOffset: 175, dir: 'bottom', type: 'terre' }
+        { id: 'e1_L', name: 'E1: L', code: 'L', xOffset: 24, yOffset: 160, dir: 'bottom', type: 'retour' },
+        { id: 'e1_N', name: 'E1: N', code: 'N', xOffset: Math.floor(lampW / 2), yOffset: 160, dir: 'bottom', type: 'neutre' },
+        { id: 'e1_PE', name: 'E1: PE', code: 'PE', xOffset: lampW - 24, yOffset: 160, dir: 'bottom', type: 'terre' }
       ]
     });
 
@@ -448,24 +448,24 @@ class MobileComponentManager extends ComponentManager {
       id: 'e2',
       type: 'lamp',
       x: lamp2X,
-      y: 420,
+      y: 415,
       width: lampW,
-      height: 195,
+      height: 180,
       labelFr: 'Lampe E2',
       labelAr: 'المصباح E2 (توازي)',
       state: { isLit: false },
       terminals: [
-        { id: 'e2_L', name: 'E2: L', code: 'L', xOffset: 25, yOffset: 175, dir: 'bottom', type: 'retour' },
-        { id: 'e2_N', name: 'E2: N', code: 'N', xOffset: Math.floor(lampW / 2), yOffset: 175, dir: 'bottom', type: 'neutre' },
-        { id: 'e2_PE', name: 'E2: PE', code: 'PE', xOffset: lampW - 25, yOffset: 175, dir: 'bottom', type: 'terre' }
+        { id: 'e2_L', name: 'E2: L', code: 'L', xOffset: 24, yOffset: 160, dir: 'bottom', type: 'retour' },
+        { id: 'e2_N', name: 'E2: N', code: 'N', xOffset: Math.floor(lampW / 2), yOffset: 160, dir: 'bottom', type: 'neutre' },
+        { id: 'e2_PE', name: 'E2: PE', code: 'PE', xOffset: lampW - 24, yOffset: 160, dir: 'bottom', type: 'terre' }
       ]
     });
 
     this.rebuildTerminalsIndex();
   }
 
-  // Large touch target detection for mobile fingers (tolerance = 26px!)
-  getTerminalAt(x, y, tolerance = 26) {
+  // Generous touch hit detection for mobile screens (tolerance = 28px)
+  getTerminalAt(x, y, tolerance = 28) {
     return this.terminals.find(t => {
       const dx = t.x - x;
       const dy = t.y - y;
@@ -473,7 +473,49 @@ class MobileComponentManager extends ComponentManager {
     });
   }
 
-  // Slightly larger terminal node rendering for mobile touchscreens
+  // Interactive toggle with full support for window.mobileApp and easy finger targets
+  handleClick(x, y) {
+    let handled = false;
+    for (let comp of this.components) {
+      if (x >= comp.x && x <= comp.x + comp.width && y >= comp.y && y <= comp.y + comp.height) {
+        // Skip if touching near a terminal node
+        const nearTerminal = this.getTerminalAt(x, y, 22);
+        if (nearTerminal) continue;
+
+        const currentApp = window.mobileApp || window.app;
+
+        if (comp.type === 'disjoncteur') {
+          comp.state.isOn = !comp.state.isOn;
+          if (window.soundEngine) window.soundEngine.playSwitchClick(comp.state.isOn);
+          handled = true;
+        } else if (comp.type === 'switch_sa') {
+          comp.state.isClosed = !comp.state.isClosed;
+          if (window.soundEngine) window.soundEngine.playSwitchClick(comp.state.isClosed);
+          handled = true;
+        } else if (comp.type === 'switch_vv' || comp.type === 'switch_3way_us') {
+          comp.state.position = comp.state.position === 1 ? 2 : 1;
+          if (window.soundEngine) window.soundEngine.playSwitchClick(comp.state.position === 1);
+          handled = true;
+        } else if (comp.type === 'push_button') {
+          comp.state.isPressed = true;
+          if (window.soundEngine) window.soundEngine.playSwitchClick(true);
+          setTimeout(() => {
+            comp.state.isPressed = false;
+            if (currentApp) currentApp.evaluateCircuit();
+          }, 220);
+          if (currentApp) currentApp.handlePushButtonImpulse(comp.id);
+          handled = true;
+        } else if (comp.type === 'telerupteur') {
+          comp.state.isClosed = !comp.state.isClosed;
+          if (window.soundEngine) window.soundEngine.playRelayClack();
+          handled = true;
+        }
+      }
+    }
+    return handled;
+  }
+
+  // Clear terminal node rendering with prominent labels and touch rings
   renderTerminals(ctx, hoveredTerminal = null, selectedTerminal = null) {
     this.terminals.forEach(t => {
       ctx.save();
@@ -484,7 +526,7 @@ class MobileComponentManager extends ComponentManager {
       if (isSelected || isHovered) {
         ctx.fillStyle = isSelected ? 'rgba(59, 130, 246, 0.45)' : 'rgba(234, 88, 12, 0.4)';
         ctx.beginPath();
-        ctx.arc(t.x, t.y, t.radius + 10, 0, Math.PI * 2);
+        ctx.arc(t.x, t.y, t.radius + 12, 0, Math.PI * 2);
         ctx.fill();
       }
 

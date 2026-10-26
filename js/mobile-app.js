@@ -1,7 +1,9 @@
 /**
  * Mobile-Specific Application Controller & Touch Interaction Engine (NFC 15-100)
  * Designed for smartphones and touchscreens:
- * - Direct Tap-to-Wire mode with visual glowing connection indicator
+ * - Fluid, native 60fps vertical scrolling with Tap vs Scroll differentiation
+ * - Direct Tap-to-Wire mode with visual floating guide banner
+ * - Quick-jump helper to smoothly scroll between Breakers and Lamps
  * - Haptic vibration feedback on touch interactions
  * - Bottom Sheet Drawer for Diagnostics & Audit checklist
  * - Full pedagogical circuits: Double Allumage (2 separate switches), SA, VV, Télérupteur
@@ -69,8 +71,9 @@ class MobileSimulatorApp {
     const rect = wrapper.getBoundingClientRect();
     const dpr = window.devicePixelRatio || 1;
 
-    const w = Math.floor(rect.width);
-    const h = Math.max(650, Math.floor(window.innerHeight - 190));
+    const w = Math.floor(rect.width) || window.innerWidth || 390;
+    // Stable height of 680px for the 3 vertical tiers
+    const h = 680;
 
     this.canvas.width = w * dpr;
     this.canvas.height = h * dpr;
@@ -169,6 +172,7 @@ class MobileSimulatorApp {
       btnReset.addEventListener('click', () => {
         this.triggerHaptic(35);
         this.wr.clear();
+        this.cancelConnecting();
         this.evaluateCircuit();
         this.showToast('تم تفريغ جميع الأسلاك', 'info');
       });
@@ -187,7 +191,6 @@ class MobileSimulatorApp {
 
     // Audit Sheet Drawer Toggle & Close
     const btnToggleAudit = document.getElementById('btnToggleAuditSheet');
-    const auditSheet = document.getElementById('mobileAuditSheet');
     const btnCloseAudit = document.getElementById('btnCloseAuditSheet');
 
     if (btnToggleAudit) {
@@ -197,9 +200,89 @@ class MobileSimulatorApp {
       btnCloseAudit.addEventListener('click', () => this.closeAuditSheet());
     }
 
-    // Touch & Pointer interaction on Canvas
-    this.canvas.addEventListener('touchstart', (e) => this.handleTouch(e), { passive: false });
-    this.canvas.addEventListener('mousedown', (e) => this.handlePointer(e));
+    // Scroll Helper (Jump smoothly between Breaker and Lamps)
+    const mobileMain = document.getElementById('mobileMain');
+    const btnScrollLamps = document.getElementById('btnScrollToLamps');
+    const btnScrollBreaker = document.getElementById('btnScrollToBreaker');
+
+    if (mobileMain && btnScrollLamps && btnScrollBreaker) {
+      mobileMain.addEventListener('scroll', () => {
+        if (mobileMain.scrollTop > 120) {
+          btnScrollLamps.classList.add('hidden');
+          btnScrollBreaker.classList.remove('hidden');
+        } else {
+          btnScrollLamps.classList.remove('hidden');
+          btnScrollBreaker.classList.add('hidden');
+        }
+      }, { passive: true });
+
+      btnScrollLamps.addEventListener('click', () => {
+        this.triggerHaptic(15);
+        mobileMain.scrollTo({ top: 380, behavior: 'smooth' });
+      });
+
+      btnScrollBreaker.addEventListener('click', () => {
+        this.triggerHaptic(15);
+        mobileMain.scrollTo({ top: 0, behavior: 'smooth' });
+      });
+    }
+
+    // FLUID TAP VS SCROLL ENGINE:
+    // Does NOT call e.preventDefault() on touchstart, allowing natural 60fps vertical scroll!
+    let touchStartX = 0;
+    let touchStartY = 0;
+    let touchStartTime = 0;
+    let isTouchScrolling = false;
+
+    this.canvas.addEventListener('touchstart', (e) => {
+      if (e.touches.length === 1) {
+        const t = e.touches[0];
+        touchStartX = t.clientX;
+        touchStartY = t.clientY;
+        touchStartTime = Date.now();
+        isTouchScrolling = false;
+      }
+    }, { passive: true });
+
+    this.canvas.addEventListener('touchmove', (e) => {
+      if (e.touches.length === 1) {
+        const t = e.touches[0];
+        const dx = t.clientX - touchStartX;
+        const dy = t.clientY - touchStartY;
+        if (Math.hypot(dx, dy) > 8) {
+          isTouchScrolling = true;
+        }
+      }
+    }, { passive: true });
+
+    this.canvas.addEventListener('touchend', (e) => {
+      const elapsed = Date.now() - touchStartTime;
+      // If user moved more than 8px or held down longer than 500ms, it was a scroll gesture
+      if (isTouchScrolling || elapsed > 500) {
+        return;
+      }
+
+      const touch = e.changedTouches ? e.changedTouches[0] : null;
+      if (!touch) return;
+
+      const rect = this.canvas.getBoundingClientRect();
+      const coords = {
+        x: touch.clientX - rect.left,
+        y: touch.clientY - rect.top
+      };
+
+      this.processInteraction(coords);
+    });
+
+    // Also support direct click for testing and mouse interaction
+    this.canvas.addEventListener('click', (e) => {
+      const rect = this.canvas.getBoundingClientRect();
+      const coords = {
+        x: e.clientX - rect.left,
+        y: e.clientY - rect.top
+      };
+      this.processInteraction(coords);
+    });
 
     // Cancel connection button
     const btnCancelWire = document.getElementById('btnCancelMobileWire');
@@ -221,35 +304,11 @@ class MobileSimulatorApp {
     }
   }
 
-  getTouchCoords(e) {
-    const rect = this.canvas.getBoundingClientRect();
-    const touch = e.touches ? e.touches[0] : e;
-    return {
-      x: touch.clientX - rect.left,
-      y: touch.clientY - rect.top
-    };
-  }
-
-  handleTouch(e) {
-    e.preventDefault();
-    const coords = this.getTouchCoords(e);
-    this.processInteraction(coords);
-  }
-
-  handlePointer(e) {
-    const rect = this.canvas.getBoundingClientRect();
-    const coords = {
-      x: e.clientX - rect.left,
-      y: e.clientY - rect.top
-    };
-    this.processInteraction(coords);
-  }
-
   processInteraction(coords) {
     this.touchPos = coords;
 
-    // 1. Check if clicking/tapping a terminal pin (with generous 26px tolerance!)
-    const pin = this.cm.getTerminalAt(coords.x, coords.y, 26);
+    // 1. Check if clicking/tapping a terminal pin (with generous 28px tolerance!)
+    const pin = this.cm.getTerminalAt(coords.x, coords.y, 28);
     if (pin) {
       this.triggerHaptic(25);
       if (!this.isConnecting) {
@@ -273,13 +332,13 @@ class MobileSimulatorApp {
       return;
     }
 
-    // If tap outside when connecting, cancel connection
+    // If tapped on empty space while connecting, cancel connection
     if (this.isConnecting) {
       this.cancelConnecting();
       return;
     }
 
-    // 2. Check if clicking on switch / breaker lever / push button
+    // 2. Check if clicking on switch / breaker / push button
     const handled = this.cm.handleClick(coords.x, coords.y);
     if (handled) {
       this.triggerHaptic(30);
@@ -288,7 +347,7 @@ class MobileSimulatorApp {
     }
 
     // 3. Check if clicking on an existing wire to select/delete it
-    const wire = this.wr.getWireAt(coords.x, coords.y, 14);
+    const wire = this.wr.getWireAt(coords.x, coords.y, 16);
     if (wire) {
       this.triggerHaptic(20);
       if (this.wr.selectedWireId === wire.id) {
@@ -441,16 +500,19 @@ class MobileSimulatorApp {
       checklist.innerHTML = '';
       report.checks.forEach(chk => {
         const item = document.createElement('div');
-        item.className = `p-2.5 rounded-xl border text-xs flex items-start gap-2.5 ${
-          chk.pass ? 'bg-emerald-950/30 border-emerald-800/40 text-emerald-200' : 'bg-slate-800/60 border-slate-700 text-slate-300'
+        item.className = `p-2.5 rounded-xl text-xs flex items-start gap-2 border ${
+          chk.passed ? 'bg-emerald-950/40 border-emerald-800/50 text-emerald-300' : 'bg-rose-950/40 border-rose-800/50 text-rose-300'
         }`;
-        item.innerHTML = `
-          <span class="text-sm font-bold ${chk.pass ? 'text-emerald-400' : 'text-slate-500'}">${chk.pass ? '✓' : '○'}</span>
-          <div>
-            <div class="font-bold">${chk.label}</div>
-            <div class="text-[11px] text-slate-400 mt-0.5">${chk.desc}</div>
-          </div>
-        `;
+
+        const icon = document.createElement('i');
+        icon.className = chk.passed ? 'fa-solid fa-circle-check text-emerald-400 mt-0.5' : 'fa-solid fa-circle-xmark text-rose-400 mt-0.5';
+        item.appendChild(icon);
+
+        const textDiv = document.createElement('div');
+        textDiv.className = 'flex-1';
+        textDiv.innerHTML = `<b class="block text-white mb-0.5">${chk.nameAr}</b><span class="text-[11px] opacity-80">${chk.descAr}</span>`;
+        item.appendChild(textDiv);
+
         checklist.appendChild(item);
       });
     }
