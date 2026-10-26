@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>محاكي التوصيلات الكهربائية المنزلية (كهرباء البناء) | NFC 15-100</title>
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#f0f9ff',
+              100: '#e0f2fe',
+              500: '#0284c7',
+              600: '#0369a1',
+              900: '#0c4a6e',
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Google Fonts & Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="css/simulator.css">
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col antialiased selection:bg-blue-600 selection:text-white">
+
+  <!-- TOP HEADER -->
+  <header class="bg-slate-900 border-b border-slate-800 shadow-xl px-4 py-3 sticky top-0 z-30">
+    <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-4">
+      
+      <!-- Brand & Title -->
+      <div class="flex items-center gap-3">
+        <div class="w-11 h-11 rounded-xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-amber-500 flex items-center justify-center shadow-lg shadow-blue-500/20 text-white text-xl">
+          <i class="fa-solid fa-bolt"></i>
+        </div>
+        <div>
+          <h1 class="text-lg md:text-xl font-black text-white flex items-center gap-2">
+            <span>محاكي التوصيلات الكهربائية المنزلية</span>
+            <span class="text-xs px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-400 border border-blue-500/30 font-tech">NFC 15-100</span>
+          </h1>
+          <p class="text-xs text-slate-400 font-tech">
+            Simulateur Pédagogique de Câblage Électrique Résidentiel & Bâtiment
+          </p>
+        </div>
+      </div>
+
+      <!-- Quick Actions Toolbar -->
+      <div class="flex items-center gap-2 flex-wrap">
+        <button id="btnCreateBackup" class="btn-action px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold border border-emerald-500 shadow-lg shadow-emerald-600/20 flex items-center gap-1.5" title="حفظ نسخة احتياطية فورية في المتصفح">
+          <i class="fa-solid fa-floppy-disk"></i>
+          <span>💾 إنشاء نسخة احتياطية</span>
+        </button>
+
+        <button id="btnHistoryModal" class="btn-action px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-teal-300 text-xs font-bold border border-slate-700 flex items-center gap-1.5" title="استعراض واستعادة النسخ الاحتياطية وتصدير/استيراد JSON">
+          <i class="fa-solid fa-clock-rotate-left text-teal-400"></i>
+          <span>سجل النسخ (Historique)</span>
+        </button>
+
+        <button id="btnSchemaModal" class="btn-action px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold border border-slate-700 flex items-center gap-1.5">
+          <i class="fa-solid fa-book-open text-sky-400"></i>
+          <span>المخطط النظري (Schéma)</span>
+        </button>
+
+        <button id="btnToggleSound" class="btn-action px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold border border-slate-700 flex items-center gap-1.5">
+          <i class="fa-solid fa-volume-high text-emerald-400"></i>
+          <span>صوت مفعّل</span>
+        </button>
+
+        <button id="btnExport" class="btn-action px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold border border-slate-700 flex items-center gap-1.5">
+          <i class="fa-solid fa-camera text-amber-400"></i>
+          <span>تصدير صورة</span>
+        </button>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- CIRCUIT SELECTOR TABS -->
+  <nav class="bg-slate-900/90 border-b border-slate-800 px-4 py-2">
+    <div class="max-w-7xl mx-auto flex items-center gap-2 overflow-x-auto pb-1">
+      <span class="text-xs font-bold text-slate-400 ml-2 whitespace-nowrap">الدارة المختارة:</span>
+      
+      <button data-mode="SA" class="btn-action px-3 py-2 rounded-lg text-xs font-bold flex items-center gap-2 whitespace-nowrap bg-slate-800 text-slate-300 hover:bg-slate-700 transition">
+        <i class="fa-solid fa-lightbulb"></i>
+        <span>1. الإنارة البسيطة (Simple Allumage)</span>
+      </button>
+
+      <button data-mode="DA" class="btn-action px-3 py-2 rounded-lg text-xs font-bold flex items-center gap-2 whitespace-nowrap bg-blue-600 text-white shadow-md transition">
+        <i class="fa-solid fa-cubes-stacked"></i>
+        <span>2. الإنارة المزدوجة (Double Allumage) [قاطعتان مستقلتان]</span>
+      </button>
+
+      <button data-mode="VV" class="btn-action px-3 py-2 rounded-lg text-xs font-bold flex items-center gap-2 whitespace-nowrap bg-slate-800 text-slate-300 hover:bg-slate-700 transition">
+        <i class="fa-solid fa-arrow-right-arrow-left"></i>
+        <span>3. الذهاب والإياب (Va-et-vient)</span>
+      </button>
+
+      <button data-mode="TL" class="btn-action px-3 py-2 rounded-lg text-xs font-bold flex items-center gap-2 whitespace-nowrap bg-slate-800 text-slate-300 hover:bg-slate-700 transition">
+        <i class="fa-solid fa-clock"></i>
+        <span>4. المرحل النبضي (Télérupteur 4 Fils - 3 أزرار)</span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- SUB-NAVIGATION BAR FOR VA-ET-VIENT INTERNATIONAL VARIANTS -->
+  <div id="vvVariantsBar" class="bg-slate-950/90 border-b border-slate-800 px-4 py-2 hidden">
+    <div class="max-w-7xl mx-auto flex items-center gap-2 overflow-x-auto">
+      <span class="text-xs font-bold text-amber-400 ml-2 whitespace-nowrap flex items-center gap-1.5">
+        <i class="fa-solid fa-globe"></i>
+        <span>طريقة التوصيل الدولية:</span>
+      </span>
+
+      <!-- French Standard NFC 15-100 -->
+      <button data-vv-variant="FR" class="btn-action px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 whitespace-nowrap bg-amber-600 text-white shadow transition">
+        <span>🇫🇷 المعيار الفرنسي القياسي (NFC 15-100)</span>
+      </button>
+
+      <!-- German Sparwechselschaltung -->
+      <button data-vv-variant="DE" class="btn-action px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 whitespace-nowrap bg-slate-800 text-slate-300 hover:bg-slate-700 transition">
+        <span>🇩🇪 التركيب الاقتصادي الألماني (Sparwechselschaltung)</span>
+      </button>
+
+      <!-- US 3-Way NEC -->
+      <button data-vv-variant="US" class="btn-action px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 whitespace-nowrap bg-slate-800 text-slate-300 hover:bg-slate-700 transition">
+        <span>🇺🇸 المعيار الأمريكي (US 3-Way NEC)</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- COMPONENT MANAGEMENT TOOLBAR (BOÎTE À COMPOSANTS - FULL USER CONTROL) -->
+  <div class="bg-slate-900/95 border-b border-slate-800 px-4 py-2 shadow-inner">
+    <div class="max-w-7xl mx-auto flex items-center justify-between gap-3 flex-wrap">
+      
+      <div class="flex items-center gap-2 overflow-x-auto pb-0.5">
+        <span class="text-xs font-black text-amber-400 ml-1 whitespace-nowrap flex items-center gap-1.5">
+          <i class="fa-solid fa-toolbox text-amber-400"></i>
+          <span>إضافة أجهزة إلى اللوحة:</span>
+        </span>
+
+        <button data-add-component="disjoncteur" class="btn-action px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold border border-slate-700 flex items-center gap-1.5 whitespace-nowrap" title="Ajouter un Disjoncteur 10A">
+          <i class="fa-solid fa-shield-halved text-sky-400"></i>
+          <span>+ قاطع 10A (Disjoncteur)</span>
+        </button>
+
+        <button data-add-component="switch_sa" class="btn-action px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold border border-slate-700 flex items-center gap-1.5 whitespace-nowrap" title="Ajouter un Interrupteur Simple Allumage">
+          <i class="fa-solid fa-toggle-on text-emerald-400"></i>
+          <span>+ قاطعة بسيطة (SA)</span>
+        </button>
+
+        <button data-add-component="switch_vv" class="btn-action px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold border border-slate-700 flex items-center gap-1.5 whitespace-nowrap" title="Ajouter un Interrupteur Va-et-vient">
+          <i class="fa-solid fa-arrow-right-arrow-left text-amber-400"></i>
+          <span>+ قاطعة ذهاب/إياب (VV)</span>
+        </button>
+
+        <button data-add-component="push_button" class="btn-action px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold border border-slate-700 flex items-center gap-1.5 whitespace-nowrap" title="Ajouter un Bouton-Poussoir">
+          <i class="fa-solid fa-circle-dot text-indigo-400"></i>
+          <span>+ زر ضاغط (BP)</span>
+        </button>
+
+        <button data-add-component="telerupteur" class="btn-action px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold border border-slate-700 flex items-center gap-1.5 whitespace-nowrap" title="Ajouter un Télérupteur 4 Fils">
+          <i class="fa-solid fa-clock text-purple-400"></i>
+          <span>+ مرحل نبضي (TL)</span>
+        </button>
+
+        <button data-add-component="lamp" class="btn-action px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold border border-slate-700 flex items-center gap-1.5 whitespace-nowrap" title="Ajouter une Lampe Bornier DCL (L, N, PE)">
+          <i class="fa-solid fa-lightbulb text-yellow-400"></i>
+          <span>+ مصباح (Lampe DCL)</span>
+        </button>
+      </div>
+
+      <div class="text-[11px] text-slate-400 font-tech hidden lg:flex items-center gap-2">
+        <span class="px-2 py-0.5 rounded bg-blue-950/60 text-blue-300 border border-blue-800/60 font-bold">✥ تحكم كامل:</span>
+        <span>اسحب أي جهاز لتحريكه بحرية | انقر لتحديده وتعديله أو حذفه</span>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- MAIN CONTAINER -->
+  <main class="max-w-7xl mx-auto w-full p-4 flex-1 flex flex-col gap-4">
+
+    <!-- Active Mode Description Banner -->
+    <div class="bg-slate-900 border border-slate-800 rounded-xl p-3 flex flex-wrap items-center justify-between gap-3">
+      <div>
+        <h2 id="currentCircuitTitle" class="text-sm font-bold text-sky-400">
+          2. الإنارة المزدوجة (Double Allumage - DA) [قاطعتان مستقلتان]
+        </h2>
+        <p id="currentCircuitDesc" class="text-xs text-slate-400 mt-0.5">
+          قاطعتان منفصلتان جنباً إلى جنب: القاطعة 1 تتحكم في مصباحين بالتوازي (E1 و E2)، والقاطعة 2 تتحكم في مصباح (E3)، مع ربط أسلاك متعددة على نفس الطرف للتوزيع المتسلسل (Repiquage).
+        </p>
+      </div>
+
+      <!-- Action Test & Solution Buttons -->
+      <div class="flex items-center gap-2 flex-wrap">
+        <button id="btnTestCircuit" class="btn-action px-4 py-2 rounded-lg bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-black shadow-lg shadow-emerald-700/30 flex items-center gap-2">
+          <i class="fa-solid fa-play"></i>
+          <span>Tester le Circuit / اختبار الدائرة</span>
+        </button>
+
+        <button id="btnSolution" class="btn-action px-3 py-2 rounded-lg bg-indigo-600/30 hover:bg-indigo-600/50 text-indigo-300 text-xs font-bold border border-indigo-500/40 flex items-center gap-1.5">
+          <i class="fa-solid fa-wand-magic-sparkles text-indigo-400"></i>
+          <span>التوصيل النموذجي (Solution)</span>
+        </button>
+
+        <button id="btnUndo" class="btn-action px-3 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold border border-slate-700 flex items-center gap-1">
+          <i class="fa-solid fa-rotate-left"></i>
+          <span>تراجع</span>
+        </button>
+
+        <button id="btnReset" class="btn-action px-3 py-2 rounded-lg bg-rose-950/40 hover:bg-rose-900/60 text-rose-300 text-xs font-bold border border-rose-800/50 flex items-center gap-1">
+          <i class="fa-solid fa-trash-can"></i>
+          <span>تفريغ الأسلاك</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- WORKBENCH LAYOUT (Canvas + Diagnostics Sidebar) -->
+    <div class="grid grid-cols-1 lg:grid-cols-4 gap-4 flex-1">
+      
+      <!-- CANVAS WORKBENCH AREA (3 Columns) -->
+      <div class="lg:col-span-3 flex flex-col bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-2xl relative">
+        
+        <!-- ACCESSIBLE STANDARD COLOR WIRE TOOLBAR (NFC 15-100) -->
+        <div class="bg-slate-950/90 backdrop-blur border-b border-slate-800 px-4 py-2.5 flex items-center justify-between gap-3 flex-wrap">
+          <div class="flex items-center gap-2 flex-wrap">
+            <span class="text-xs font-black text-slate-300 ml-1 flex items-center gap-1">
+              <i class="fa-solid fa-palette text-amber-400"></i>
+              <span>لون السلك النشط:</span>
+            </span>
+            
+            <!-- Red Phase -->
+            <button data-color="#dc2626" data-wire-type="phase" class="btn-action px-2.5 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 bg-rose-600/20 text-rose-300 border border-rose-500/40 ring-4 ring-white shadow-lg transition" title="Phase (Rouge)">
+              <span class="w-3.5 h-3.5 rounded-full bg-rose-600 inline-block shadow-sm"></span>
+              <span>Phase (أحمر)</span>
+            </button>
+
+            <!-- Blue Neutral -->
+            <button data-color="#2563eb" data-wire-type="neutre" class="btn-action px-2.5 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 bg-blue-600/20 text-blue-300 border border-blue-500/40 hover:bg-blue-600/30 transition" title="Neutre (Bleu)">
+              <span class="w-3.5 h-3.5 rounded-full bg-blue-600 inline-block shadow-sm"></span>
+              <span>Neutre (أزرق)</span>
+            </button>
+
+            <!-- Yellow/Green Earth -->
+            <button data-color="#16a34a" data-wire-type="terre" class="btn-action px-2.5 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 bg-emerald-600/20 text-emerald-300 border border-emerald-500/40 hover:bg-emerald-600/30 transition" title="Terre PE (Jaune/Vert)">
+              <span class="w-3.5 h-3.5 rounded-full bg-earth-stripes inline-block shadow-sm border border-black/20"></span>
+              <span>Terre PE (مخطط)</span>
+            </button>
+
+            <!-- Black Retour de Lampe -->
+            <button data-color="#18181b" data-wire-type="retour" class="btn-action px-2.5 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 bg-slate-800 text-slate-200 border border-slate-700 hover:bg-slate-700 transition" title="Retour (Noir)">
+              <span class="w-3.5 h-3.5 rounded-full bg-zinc-950 border border-slate-500 inline-block"></span>
+              <span>Retour (أسود)</span>
+            </button>
+
+            <!-- Brown Retour Alternatif -->
+            <button data-color="#78350f" data-wire-type="retour" class="btn-action px-2.5 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 bg-amber-950/40 text-amber-200 border border-amber-800/50 hover:bg-amber-900/50 transition" title="Retour (Marron)">
+              <span class="w-3.5 h-3.5 rounded-full bg-amber-800 border border-amber-600 inline-block"></span>
+              <span>Retour (بني)</span>
+            </button>
+
+            <!-- Orange Navette -->
+            <button data-color="#ea580c" data-wire-type="navette" class="btn-action px-2.5 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 bg-orange-600/20 text-orange-300 border border-orange-500/40 hover:bg-orange-600/30 transition" title="Navette (Orange)">
+              <span class="w-3.5 h-3.5 rounded-full bg-orange-600 inline-block shadow-sm"></span>
+              <span>Navette (برتقالي)</span>
+            </button>
+
+            <!-- Custom Color Picker -->
+            <div class="flex items-center gap-1.5 bg-slate-800/80 px-2 py-1 rounded-lg border border-slate-700 hover:border-slate-600 transition" title="لون مخصص (Couleur Personnalisée)">
+              <label for="customColorPicker" class="text-[11px] text-slate-300 font-bold cursor-pointer">مخصص:</label>
+              <input type="color" id="customColorPicker" value="#8b5cf6" class="w-5 h-5 rounded cursor-pointer border-0 bg-transparent p-0 block">
+            </div>
+          </div>
+
+          <div class="text-[11px] text-slate-400 font-tech hidden xl:block">
+            <span class="text-sky-400 font-bold">التسلسل (Repiquage):</span> يمكنك ربط عدة أسلاك على نفس الطرف مباشرة (L, N, PE)
+          </div>
+        </div>
+
+        <!-- Canvas Container -->
+        <div class="canvas-wrapper relative flex-1 min-h-[620px] w-full overflow-hidden">
+          
+          <!-- CONTEXTUAL FLOATING ACTION BAR: SELECTED COMPONENT -->
+          <div id="compSelectionBar" class="hidden absolute top-3 left-1/2 -translate-x-1/2 z-20 bg-slate-900/95 backdrop-blur border border-cyan-500/60 shadow-2xl shadow-cyan-950/60 px-3.5 py-1.5 rounded-xl flex items-center gap-2.5 text-xs text-white">
+            <span class="flex items-center gap-1.5 font-bold text-cyan-300">
+              <i class="fa-solid fa-microchip text-cyan-400"></i>
+              <span id="selectedCompLabel">المكون المحدد</span>
+            </span>
+            <span class="text-slate-700">|</span>
+            <button id="btnRenameComp" class="btn-action px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold border border-slate-700 flex items-center gap-1" title="تعديل اسم المكون">
+              <i class="fa-solid fa-pen text-amber-400"></i>
+              <span>تسمية</span>
+            </button>
+            <button id="btnDuplicateComp" class="btn-action px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold border border-slate-700 flex items-center gap-1" title="تكرار المكون">
+              <i class="fa-solid fa-clone text-sky-400"></i>
+              <span>نسخ</span>
+            </button>
+            <button id="btnDeleteComp" class="btn-action px-3 py-1 rounded-lg bg-rose-950/60 hover:bg-rose-900/80 text-rose-200 font-bold border border-rose-800/60 flex items-center gap-1" title="حذف المكون مع أسلاكه الموصولة">
+              <i class="fa-solid fa-trash-can text-rose-400"></i>
+              <span>حذف</span>
+            </button>
+            <button id="btnDeselectComp" class="text-slate-400 hover:text-white px-1 text-base ml-1" title="إلغاء التحديد">
+              <i class="fa-solid fa-xmark"></i>
+            </button>
+          </div>
+
+          <!-- CONTEXTUAL FLOATING ACTION BAR: SELECTED WIRE -->
+          <div id="wireSelectionBar" class="hidden absolute top-3 left-1/2 -translate-x-1/2 z-20 bg-slate-900/95 backdrop-blur border border-blue-500/60 shadow-2xl shadow-blue-950/60 px-3.5 py-1.5 rounded-xl flex items-center gap-2.5 text-xs text-white">
+            <span class="flex items-center gap-1.5 font-bold text-blue-300">
+              <i class="fa-solid fa-bolt text-blue-400"></i>
+              <span id="selectedWireLabel">السلك المحدد</span>
+            </span>
+            <span class="text-[11px] text-amber-300 font-semibold">(انقر أي لون في الشريط لتغييره)</span>
+            <span class="text-slate-700">|</span>
+            <button id="btnDeleteWire" class="btn-action px-3 py-1 rounded-lg bg-rose-950/60 hover:bg-rose-900/80 text-rose-200 font-bold border border-rose-800/60 flex items-center gap-1" title="حذف السلك">
+              <i class="fa-solid fa-trash-can text-rose-400"></i>
+              <span>حذف السلك</span>
+            </button>
+            <button id="btnDeselectWire" class="text-slate-400 hover:text-white px-1 text-base ml-1" title="إلغاء التحديد">
+              <i class="fa-solid fa-xmark"></i>
+            </button>
+          </div>
+
+          <canvas id="circuitCanvas" class="w-full h-full block cursor-default"></canvas>
+        </div>
+
+        <!-- Canvas Bottom Status Info Bar -->
+        <div id="terminalHoverInfo" class="bg-slate-950 border-t border-slate-800 px-4 py-2 text-xs flex items-center justify-between text-slate-400">
+          <span>حرّك المؤشر فوق أي مأخذ (Borne) أو قاطعة للتفاعل معها</span>
+        </div>
+
+      </div>
+
+      <!-- DIAGNOSTICS & AUDIT PANEL (1 Column) -->
+      <div class="flex flex-col gap-4">
+        
+        <!-- Status Card -->
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 shadow-xl flex flex-col gap-3">
+          <div class="flex items-center justify-between">
+            <h3 class="text-sm font-bold text-white flex items-center gap-2">
+              <i class="fa-solid fa-clipboard-check text-blue-400"></i>
+              <span>تقرير الفحص والتشخيص</span>
+            </h3>
+            <span id="auditStatusBadge" class="px-2.5 py-1 rounded-full text-xs font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30">
+              ○ بانتظار الفحص
+            </span>
+          </div>
+
+          <!-- Summary Message Box -->
+          <div id="auditSummaryMessage" class="p-3 rounded-xl bg-slate-950 border border-slate-800 text-xs text-slate-300 leading-relaxed font-semibold">
+            اضغط على زر "اختبار الدائرة" أو انقر مباشرة على مفاتيح القواطع لتجربة التوصيل ورؤية توهج المصابيح.
+          </div>
+
+          <!-- Color Warning Alerts (if any) -->
+          <div id="auditWarningsList" class="flex flex-col gap-2"></div>
+
+          <!-- Step-by-Step Requirements Checklist -->
+          <div class="border-t border-slate-800 pt-3">
+            <h4 class="text-xs font-bold text-slate-400 mb-2">قائمة تدقيق معايير التركيب (NFC 15-100):</h4>
+            <ul id="auditChecklist" class="flex flex-col gap-2">
+              <li class="flex items-start gap-2 p-2 rounded-lg text-xs bg-slate-800/60 border border-slate-700 text-slate-300">
+                <span class="text-slate-500">○</span>
+                <div>
+                  <div class="font-bold">تغذية القاطع 10A</div>
+                  <div class="text-[11px] text-slate-400">تأكد من رفع ذراع القاطع (ON)</div>
+                </div>
+              </li>
+              <li class="flex items-start gap-2 p-2 rounded-lg text-xs bg-slate-800/60 border border-slate-700 text-slate-300">
+                <span class="text-slate-500">○</span>
+                <div>
+                  <div class="font-bold">سلك الطور (Phase L)</div>
+                  <div class="text-[11px] text-slate-400">توصيل الطور بمدخل القاطعة</div>
+                </div>
+              </li>
+              <li class="flex items-start gap-2 p-2 rounded-lg text-xs bg-slate-800/60 border border-slate-700 text-slate-300">
+                <span class="text-slate-500">○</span>
+                <div>
+                  <div class="font-bold">سلك المحايد والتسلسل (Neutre & Repiquage)</div>
+                  <div class="text-[11px] text-slate-400">توصيل المحايد بالمصابيح بالتسلسل مباشرة على طرف N</div>
+                </div>
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Pedagogical Guide Card -->
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 shadow-xl flex flex-col gap-2.5 text-xs">
+          <h4 class="font-bold text-sky-400 flex items-center gap-2">
+            <i class="fa-solid fa-graduation-cap"></i>
+            <span>إرشادات التعلّم الذاتي والتركيب الحقيقي</span>
+          </h4>
+          <p class="text-slate-400 leading-relaxed">
+            • <b>القاطعة المزدوجة (DA):</b> تمثل قاطعتين مستقلتين (Interrupteur 1 و Interrupteur 2) متجاورتين كما في الواقع، يتم تغذيتهما بالطور عبر جسر تسلسل (Pontage)، لتقوم القاطعة 1 بتشغيل E1 و E2 معاً، والقاطعة 2 بتشغيل E3 منفرداً.
+          </p>
+          <p class="text-slate-400 leading-relaxed">
+            • <b>التسلسل الواقعي (Repiquage):</b> تماماً كما في علب التوصيل الحقيقية، يمكنك ربط عدة أسلاك على نفس البرغي (Terminal Node) دون الحاجة لأطراف اصطناعية.
+          </p>
+          <div class="p-2.5 rounded-lg bg-blue-950/30 border border-blue-900/50 text-[11px] text-blue-300">
+            💡 <b>طبقات العرض:</b> الأسلاك ترسم فوق الأجهزة وتبقى واضحة تماماً دون أن تختفي تحت أي مكون.
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- MODAL: THEORETICAL SCHEMATIC & NFC 15-100 NOTES -->
+  <div id="schemaModal" class="fixed inset-0 bg-black/75 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-2xl w-full p-6 shadow-2xl flex flex-col gap-4 relative">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+        <h3 id="schemaModalTitle" class="text-base font-bold text-white flex items-center gap-2">
+          <i class="fa-solid fa-book-open text-sky-400"></i>
+          <span>المخطط النظري ومعايير التوصيل (NFC 15-100)</span>
+        </h3>
+        <button id="btnCloseModal" class="text-slate-400 hover:text-white text-lg">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div id="schemaModalContent" class="overflow-y-auto max-h-[70vh]">
+        <!-- Dynamic Content Injected by app.js -->
+      </div>
+
+      <div class="border-t border-slate-800 pt-3 flex justify-end">
+        <button onclick="document.getElementById('schemaModal').classList.add('hidden')" class="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold">
+          إغلاق النافذة
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: AUTO-BACKUP & HISTORY (HISTORIQUE DES SAUVEGARDES) -->
+  <div id="historyModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-2xl w-full p-6 shadow-2xl flex flex-col gap-4 relative">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+        <div>
+          <h3 class="text-base font-bold text-white flex items-center gap-2">
+            <i class="fa-solid fa-clock-rotate-left text-teal-400"></i>
+            <span>سجل النسخ الاحتياطية واستعادة الحالة (Historique & Restauration)</span>
+          </h3>
+          <p class="text-xs text-slate-400 mt-0.5">
+            حفظ تلقائي ويدوي للوحة العمل مع إمكانية التصدير والاستيراد لملفات JSON
+          </p>
+        </div>
+        <button id="btnCloseHistoryModal" class="text-slate-400 hover:text-white text-lg">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <!-- Action Toolbar inside Modal -->
+      <div class="flex items-center justify-between gap-2 flex-wrap border-b border-slate-800 pb-3">
+        <div class="flex items-center gap-2 flex-wrap">
+          <button id="btnManualBackupModal" class="btn-action px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow flex items-center gap-1.5">
+            <i class="fa-solid fa-floppy-disk"></i>
+            <span>💾 حفظ نسخة الآن</span>
+          </button>
+          <button id="btnExportJSONModal" class="btn-action px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-sky-300 text-xs font-bold border border-slate-700 flex items-center gap-1.5">
+            <i class="fa-solid fa-file-arrow-down text-sky-400"></i>
+            <span>تصدير ملف JSON</span>
+          </button>
+          <button id="btnImportJSONModal" class="btn-action px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-amber-300 text-xs font-bold border border-slate-700 flex items-center gap-1.5">
+            <i class="fa-solid fa-file-arrow-up text-amber-400"></i>
+            <span>استيراد ملف JSON</span>
+          </button>
+          <input type="file" id="jsonFileInput" accept=".json" class="hidden">
+        </div>
+
+        <button id="btnClearHistoryModal" class="btn-action px-2.5 py-1.5 rounded-lg bg-rose-950/40 hover:bg-rose-900/60 text-rose-300 border border-rose-800/40 text-xs font-bold flex items-center gap-1">
+          <i class="fa-solid fa-trash-can"></i>
+          <span>مسح السجل</span>
+        </button>
+      </div>
+
+      <!-- History List Container -->
+      <div id="historyItemsList" class="overflow-y-auto max-h-[50vh] flex flex-col gap-2.5 pr-1">
+        <!-- Rendered dynamically by BackupManager -->
+      </div>
+
+      <!-- Empty state when no backups exist -->
+      <div id="historyEmptyState" class="hidden text-center py-8 text-slate-400 text-xs flex flex-col items-center gap-2">
+        <i class="fa-regular fa-folder-open text-3xl text-slate-600"></i>
+        <span>لا توجد نسخ احتياطية محفوظة حالياً. اضغط على "حفظ نسخة الآن" لحفظ حالة العمل.</span>
+      </div>
+
+      <div class="border-t border-slate-800 pt-3 flex justify-end">
+        <button onclick="document.getElementById('historyModal').classList.add('hidden')" class="px-4 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold border border-slate-700">
+          إغلاق النافذة
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: RENAME COMPONENT -->
+  <div id="renameModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-5 shadow-2xl flex flex-col gap-4 relative">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+        <h3 class="text-sm font-bold text-white flex items-center gap-2">
+          <i class="fa-solid fa-pen text-amber-400"></i>
+          <span>تعديل اسم وتسمية المكون</span>
+        </h3>
+        <button id="btnCloseRenameModal" class="text-slate-400 hover:text-white text-base">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div class="flex flex-col gap-3 text-xs">
+        <div>
+          <label class="block text-slate-300 font-bold mb-1">الاسم باللغة العربية (Libellé Arabe):</label>
+          <input type="text" id="inputRenameAr" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-white font-semibold focus:outline-none focus:border-blue-500">
+        </div>
+        <div>
+          <label class="block text-slate-300 font-bold mb-1">الاسم باللغة الفرنسية (Libellé Français):</label>
+          <input type="text" id="inputRenameFr" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-white font-mono-tech focus:outline-none focus:border-blue-500">
+        </div>
+      </div>
+
+      <div class="border-t border-slate-800 pt-3 flex justify-end gap-2">
+        <button id="btnCancelRename" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold border border-slate-700">
+          إلغاء
+        </button>
+        <button id="btnSaveRename" class="px-4 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold shadow">
+          حفظ التعديل
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST NOTIFICATION CONTAINER -->
+  <div id="toastContainer" class="fixed bottom-4 left-4 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+  <!-- APPLICATION SCRIPTS -->
+  <script src="js/audio.js"></script>
+  <script src="js/components.js"></script>
+  <script src="js/wire-router.js"></script>
+  <script src="js/engine.js"></script>
+  <script src="js/backup.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

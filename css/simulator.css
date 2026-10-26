@@ -1,0 +1,137 @@
+@charset "UTF-8";
+
+/* Custom Electrical Simulator Styles */
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap');
+
+:root {
+  --color-phase: #e11d48;
+  --color-neutre: #2563eb;
+  --color-terre: #16a34a;
+  --color-retour: #18181b;
+  --color-navette: #ea580c;
+}
+
+body {
+  font-family: 'Cairo', 'Inter', system-ui, -apple-system, sans-serif;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.font-tech {
+  font-family: 'Inter', system-ui, sans-serif;
+}
+
+.font-mono-tech {
+  font-family: 'JetBrains Mono', monospace;
+}
+
+/* Yellow-Green Earth Striped Pattern */
+.bg-earth-stripes {
+  background: repeating-linear-gradient(
+    -45deg,
+    #eab308,
+    #eab308 6px,
+    #16a34a 6px,
+    #16a34a 12px
+  );
+}
+
+/* Glowing Lamp Effects */
+@keyframes lamp-pulse {
+  0%, 100% {
+    filter: drop-shadow(0 0 25px rgba(250, 204, 21, 0.85)) drop-shadow(0 0 55px rgba(251, 191, 36, 0.6));
+  }
+  50% {
+    filter: drop-shadow(0 0 35px rgba(250, 204, 21, 0.95)) drop-shadow(0 0 75px rgba(251, 191, 36, 0.75));
+  }
+}
+
+.lamp-glowing {
+  animation: lamp-pulse 2s infinite ease-in-out;
+}
+
+/* Canvas container styles */
+.canvas-wrapper {
+  background-color: #0f172a;
+  background-image: 
+    radial-gradient(#334155 1px, transparent 1px),
+    linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+  background-size: 20px 20px, 100px 100px, 100px 100px;
+  background-position: 0 0, 0 0, 0 0;
+}
+
+/* Terminal Node Hover Pulses */
+@keyframes terminal-pulse {
+  0% { transform: scale(1); opacity: 0.8; }
+  50% { transform: scale(1.3); opacity: 1; }
+  100% { transform: scale(1); opacity: 0.8; }
+}
+
+.terminal-active {
+  animation: terminal-pulse 1.2s infinite ease-in-out;
+}
+
+/* Short Circuit Flash */
+@keyframes short-circuit-flash {
+  0% { background-color: rgba(239, 68, 68, 0.4); }
+  50% { background-color: rgba(255, 255, 255, 0.8); }
+  100% { background-color: transparent; }
+}
+
+.flash-short-circuit {
+  animation: short-circuit-flash 0.5s ease-out;
+}
+
+/* Custom modern scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #1e293b;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #475569;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #64748b;
+}
+
+/* Button & Card Micro-interactions */
+.btn-action {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.btn-action:hover {
+  transform: translateY(-1px);
+}
+
+.btn-action:active {
+  transform: translateY(1px);
+}
+
+/* Grab cursors for component movement */
+.cursor-grab {
+  cursor: grab;
+}
+
+.cursor-grabbing {
+  cursor: grabbing;
+}
+
+/* Selection bounding box pulse */
+@keyframes select-dash {
+  to {
+    stroke-dashoffset: -20;
+  }
+}
+
+/* Toast animations */
+#toastContainer > div {
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.4);
+}
