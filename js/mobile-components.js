@@ -464,13 +464,20 @@ class MobileComponentManager extends ComponentManager {
     this.rebuildTerminalsIndex();
   }
 
-  // Generous touch hit detection for mobile screens (tolerance = 28px)
-  getTerminalAt(x, y, tolerance = 28) {
-    return this.terminals.find(t => {
+  // Generous touch hit detection with magnetic snapping to closest pin
+  getTerminalAt(x, y, tolerance = 40) {
+    let closest = null;
+    let minDistSq = tolerance * tolerance;
+    for (const t of this.terminals) {
       const dx = t.x - x;
       const dy = t.y - y;
-      return (dx * dx + dy * dy) <= (tolerance * tolerance);
-    });
+      const distSq = dx * dx + dy * dy;
+      if (distSq <= minDistSq) {
+        minDistSq = distSq;
+        closest = t;
+      }
+    }
+    return closest;
   }
 
   // Interactive toggle with full support for window.mobileApp and easy finger targets
@@ -479,7 +486,7 @@ class MobileComponentManager extends ComponentManager {
     for (let comp of this.components) {
       if (x >= comp.x && x <= comp.x + comp.width && y >= comp.y && y <= comp.y + comp.height) {
         // Skip if touching near a terminal node
-        const nearTerminal = this.getTerminalAt(x, y, 22);
+        const nearTerminal = this.getTerminalAt(x, y, 25);
         if (nearTerminal) continue;
 
         const currentApp = window.mobileApp || window.app;
@@ -515,24 +522,51 @@ class MobileComponentManager extends ComponentManager {
     return handled;
   }
 
-  // Clear terminal node rendering with prominent labels and touch rings
+  // Clear terminal node rendering with prominent labels, pulsating source ring, and inviting target halos
   renderTerminals(ctx, hoveredTerminal = null, selectedTerminal = null) {
     this.terminals.forEach(t => {
       ctx.save();
       const isHovered = hoveredTerminal && hoveredTerminal.id === t.id;
       const isSelected = selectedTerminal && selectedTerminal.id === t.id;
+      const isPotentialTarget = selectedTerminal && !isSelected;
 
       // Generous pulsating touch target ring
-      if (isSelected || isHovered) {
-        ctx.fillStyle = isSelected ? 'rgba(59, 130, 246, 0.45)' : 'rgba(234, 88, 12, 0.4)';
+      if (isSelected) {
+        // Bright pulsating blue/cyan ring on the source terminal
+        ctx.fillStyle = 'rgba(56, 189, 248, 0.35)';
+        ctx.beginPath();
+        ctx.arc(t.x, t.y, t.radius + 16, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.strokeStyle = '#38bdf8';
+        ctx.lineWidth = 3;
+        ctx.setLineDash([5, 4]);
+        ctx.beginPath();
+        ctx.arc(t.x, t.y, t.radius + 12, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.setLineDash([]);
+      } else if (isPotentialTarget) {
+        // Inviting green halo around all potential target terminals
+        ctx.fillStyle = 'rgba(16, 185, 129, 0.22)';
+        ctx.beginPath();
+        ctx.arc(t.x, t.y, t.radius + 12, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.strokeStyle = 'rgba(52, 211, 153, 0.8)';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(t.x, t.y, t.radius + 8, 0, Math.PI * 2);
+        ctx.stroke();
+      } else if (isHovered) {
+        ctx.fillStyle = 'rgba(234, 88, 12, 0.4)';
         ctx.beginPath();
         ctx.arc(t.x, t.y, t.radius + 12, 0, Math.PI * 2);
         ctx.fill();
       }
 
       ctx.fillStyle = '#0f172a';
-      ctx.strokeStyle = isSelected ? '#3b82f6' : (isHovered ? '#f97316' : '#64748b');
-      ctx.lineWidth = 2;
+      ctx.strokeStyle = isSelected ? '#38bdf8' : (isPotentialTarget ? '#10b981' : (isHovered ? '#f97316' : '#64748b'));
+      ctx.lineWidth = 2.5;
       ctx.beginPath();
       ctx.arc(t.x, t.y, t.radius + 1.5, 0, Math.PI * 2);
       ctx.fill();
@@ -557,16 +591,16 @@ class MobileComponentManager extends ComponentManager {
 
       // Clear terminal code label
       ctx.fillStyle = '#f8fafc';
-      ctx.font = 'bold 10px "JetBrains Mono", monospace';
+      ctx.font = 'bold 11px "JetBrains Mono", monospace';
       ctx.textAlign = 'center';
       const labelY = t.dir === 'top' ? t.y - 14 : t.y + 19;
 
       const textW = ctx.measureText(t.code).width + 8;
-      ctx.fillStyle = 'rgba(15, 23, 42, 0.9)';
-      this.roundRect(ctx, t.x - textW / 2, labelY - 10, textW, 13, 3);
+      ctx.fillStyle = isSelected ? 'rgba(2, 132, 199, 0.95)' : (isPotentialTarget ? 'rgba(5, 150, 105, 0.95)' : 'rgba(15, 23, 42, 0.9)');
+      this.roundRect(ctx, t.x - textW / 2, labelY - 10, textW, 14, 3);
       ctx.fill();
 
-      ctx.fillStyle = '#e2e8f0';
+      ctx.fillStyle = '#ffffff';
       ctx.fillText(t.code, t.x, labelY);
 
       ctx.restore();

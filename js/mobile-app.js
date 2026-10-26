@@ -227,55 +227,125 @@ class MobileSimulatorApp {
       });
     }
 
-    // FLUID TAP VS SCROLL ENGINE:
-    // Does NOT call e.preventDefault() on touchstart, allowing natural 60fps vertical scroll!
+    // DUAL DRAG-TO-WIRE & TAP-TO-WIRE ENGINE WITH MAGNETIC SNAPPING
     let touchStartX = 0;
     let touchStartY = 0;
     let touchStartTime = 0;
+    let isTouchDragWiring = false;
     let isTouchScrolling = false;
+    this.lastTouchTime = 0;
 
+    // TOUCHSTART
     this.canvas.addEventListener('touchstart', (e) => {
-      if (e.touches.length === 1) {
-        const t = e.touches[0];
-        touchStartX = t.clientX;
-        touchStartY = t.clientY;
-        touchStartTime = Date.now();
-        isTouchScrolling = false;
-      }
-    }, { passive: true });
+      this.lastTouchTime = Date.now();
+      if (e.touches.length !== 1) return;
 
+      const t = e.touches[0];
+      touchStartX = t.clientX;
+      touchStartY = t.clientY;
+      touchStartTime = Date.now();
+      isTouchScrolling = false;
+      isTouchDragWiring = false;
+
+      const rect = this.canvas.getBoundingClientRect();
+      const coords = { x: t.clientX - rect.left, y: t.clientY - rect.top };
+
+      // Did user touch directly on a terminal pin? (Generous 40px tolerance)
+      const touchedPin = this.cm.getTerminalAt(coords.x, coords.y, 40);
+      if (touchedPin) {
+        // Prevent scrolling while interacting directly with a pin
+        if (e.cancelable) e.preventDefault();
+
+        if (!this.isConnecting) {
+          // Start connection
+          this.isConnecting = true;
+          this.startPin = touchedPin;
+          this.selectedPin = touchedPin;
+          this.touchPos = coords;
+          isTouchDragWiring = true;
+          this.showWirePrompt(touchedPin);
+          this.triggerHaptic(25);
+        } else {
+          // Finish connection on touchstart of target pin!
+          if (touchedPin.id !== this.startPin.id) {
+            const wire = this.wr.addWire(this.startPin, touchedPin);
+            if (wire) {
+              this.evaluateCircuit();
+              this.triggerHaptic(40);
+              this.showToast(`تم ربط سلك: ${wire.type.toUpperCase()}`, 'success');
+            }
+          }
+          this.cancelConnecting();
+        }
+      }
+    }, { passive: false });
+
+    // TOUCHMOVE
     this.canvas.addEventListener('touchmove', (e) => {
-      if (e.touches.length === 1) {
-        const t = e.touches[0];
-        const dx = t.clientX - touchStartX;
-        const dy = t.clientY - touchStartY;
+      this.lastTouchTime = Date.now();
+      if (e.touches.length !== 1) return;
+
+      const t = e.touches[0];
+      const dx = t.clientX - touchStartX;
+      const dy = t.clientY - touchStartY;
+
+      if (isTouchDragWiring && this.isConnecting) {
+        // Dragging wire from startPin! Prevent screen scroll and track finger
+        if (e.cancelable) e.preventDefault();
+        const rect = this.canvas.getBoundingClientRect();
+        this.touchPos = { x: t.clientX - rect.left, y: t.clientY - rect.top };
+      } else {
+        // Normal page scrolling
         if (Math.hypot(dx, dy) > 8) {
           isTouchScrolling = true;
         }
       }
-    }, { passive: true });
+    }, { passive: false });
 
+    // TOUCHEND
     this.canvas.addEventListener('touchend', (e) => {
+      this.lastTouchTime = Date.now();
       const elapsed = Date.now() - touchStartTime;
-      // If user moved more than 8px or held down longer than 500ms, it was a scroll gesture
-      if (isTouchScrolling || elapsed > 500) {
-        return;
-      }
 
       const touch = e.changedTouches ? e.changedTouches[0] : null;
       if (!touch) return;
 
       const rect = this.canvas.getBoundingClientRect();
-      const coords = {
-        x: touch.clientX - rect.left,
-        y: touch.clientY - rect.top
-      };
+      const coords = { x: touch.clientX - rect.left, y: touch.clientY - rect.top };
 
+      // 1. If user was drag-wiring and released over a target pin:
+      if (isTouchDragWiring && this.isConnecting && this.startPin) {
+        const releasedPin = this.cm.getTerminalAt(coords.x, coords.y, 40);
+        if (releasedPin && releasedPin.id !== this.startPin.id) {
+          const wire = this.wr.addWire(this.startPin, releasedPin);
+          if (wire) {
+            this.evaluateCircuit();
+            this.triggerHaptic(40);
+            this.showToast(`تم تثبيت السلك بنجاح!`, 'success');
+          }
+          this.cancelConnecting();
+          return;
+        }
+        // If released on the same pin or empty space during a quick tap:
+        // Keep this.isConnecting = true so Tap-to-Wire continues!
+        isTouchDragWiring = false;
+        return;
+      }
+
+      // 2. If user was scrolling the page, ignore
+      if (isTouchScrolling || elapsed > 500) {
+        return;
+      }
+
+      // 3. Regular clean tap interaction (switches, wires, or second pin)
       this.processInteraction(coords);
     });
 
-    // Also support direct click for testing and mouse interaction
+    // CLICK (for desktop testing / CDP / mouse)
     this.canvas.addEventListener('click', (e) => {
+      // Ignore synthetic clicks from mobile browser touch events
+      if (Date.now() - this.lastTouchTime < 600) return;
+
       const rect = this.canvas.getBoundingClientRect();
       const coords = {
         x: e.clientX - rect.left,
@@ -307,8 +377,8 @@ class MobileSimulatorApp {
   processInteraction(coords) {
     this.touchPos = coords;
 
-    // 1. Check if clicking/tapping a terminal pin (with generous 28px tolerance!)
-    const pin = this.cm.getTerminalAt(coords.x, coords.y, 28);
+    // 1. Check if clicking/tapping a terminal pin (with generous 40px magnetic tolerance!)
+    const pin = this.cm.getTerminalAt(coords.x, coords.y, 40);
     if (pin) {
       this.triggerHaptic(25);
       if (!this.isConnecting) {
@@ -326,15 +396,17 @@ class MobileSimulatorApp {
             this.triggerHaptic(40);
             this.showToast(`تم ربط سلك: ${wire.type.toUpperCase()}`, 'success');
           }
+          this.cancelConnecting();
+        } else {
+          // Tapped the same pin -> keep active
         }
-        this.cancelConnecting();
       }
       return;
     }
 
-    // If tapped on empty space while connecting, cancel connection
+    // Notice: If isConnecting is true and tapped outside a pin, DO NOT cancel!
+    // Simply return so the user can try tapping the pin again!
     if (this.isConnecting) {
-      this.cancelConnecting();
       return;
     }
 
@@ -347,7 +419,7 @@ class MobileSimulatorApp {
     }
 
     // 3. Check if clicking on an existing wire to select/delete it
-    const wire = this.wr.getWireAt(coords.x, coords.y, 16);
+    const wire = this.wr.getWireAt(coords.x, coords.y, 18);
     if (wire) {
       this.triggerHaptic(20);
       if (this.wr.selectedWireId === wire.id) {
