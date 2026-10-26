@@ -39,8 +39,8 @@
 ---
 
 ### 🌐 التشغيل المباشر عبر المتصفح (Live Demo):
-يمكن تجربة المحاكي فوراً عبر الرابط العام:
-👉 [https://pages.github.com](.) *(سيتم تحديث الرابط فور تفعيل GitHub Pages)*
+يمكنك تجربة ومشاركة المحاكي فوراً عبر الرابط العام المباشر:
+👉 **[https://gamer5012.github.io/electrical-wiring-simulator/](https://gamer5012.github.io/electrical-wiring-simulator/)**
 
 ### 💻 التشغيل المحلي (Local Run):
 ```bash
