@@ -1317,4 +1317,5 @@ class ComponentManager {
   }
 }
 
+window.ComponentManager = ComponentManager;
 window.componentManager = new ComponentManager();

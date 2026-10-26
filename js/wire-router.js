@@ -382,4 +382,5 @@ class WireRouter {
   }
 }
 
+window.WireRouter = WireRouter;
 window.wireRouter = new WireRouter();

@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>محاكي التوصيلات الكهربائية 📱 | نسخة الهاتف المحمول (NFC 15-100)</title>
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#f0f9ff',
+              500: '#0284c7',
+              600: '#0369a1',
+              900: '#0c4a6e',
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Google Fonts & Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="css/simulator.css">
+  <style>
+    /* Mobile-specific touch enhancements */
+    body {
+      touch-action: manipulation;
+      overscroll-behavior: none;
+    }
+    .touch-target {
+      min-width: 44px;
+      min-height: 44px;
+    }
+    .safe-bottom {
+      padding-bottom: env(safe-area-inset-bottom, 12px);
+    }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 h-screen w-screen flex flex-col overflow-hidden select-none antialiased">
+
+  <!-- TOP MOBILE HEADER -->
+  <header class="bg-slate-900 border-b border-slate-800 px-3 py-2 flex items-center justify-between shrink-0 z-30 shadow-md">
+    <div class="flex items-center gap-2">
+      <div class="w-8 h-8 rounded-lg bg-gradient-to-tr from-blue-600 to-amber-500 flex items-center justify-center text-white text-sm shadow">
+        <i class="fa-solid fa-bolt"></i>
+      </div>
+      <div>
+        <h1 class="text-xs font-black text-white flex items-center gap-1.5">
+          <span>محاكي كهرباء البناء</span>
+          <span class="text-[9px] px-1.5 py-0.2 rounded-full bg-blue-500/20 text-blue-400 border border-blue-500/30">📱 للهاتف</span>
+        </h1>
+        <p class="text-[10px] text-slate-400 font-tech">NFC 15-100 Simulator</p>
+      </div>
+    </div>
+
+    <div class="flex items-center gap-1.5">
+      <a href="index.html" class="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-sky-300 text-[11px] font-bold border border-slate-700 flex items-center gap-1 shadow" title="التبديل إلى نسخة شاشة الحاسوب">
+        <i class="fa-solid fa-desktop text-sky-400"></i>
+        <span>الحاسوب</span>
+      </a>
+
+      <button id="btnMobileSound" class="w-8 h-8 rounded-lg bg-slate-800 border border-slate-700 flex items-center justify-center text-xs text-slate-300" title="تشغيل/كتم الصوت">
+        <i class="fa-solid fa-volume-high text-emerald-400"></i>
+      </button>
+    </div>
+  </header>
+
+  <!-- CIRCUIT SELECTOR PILLS -->
+  <nav class="bg-slate-900/95 border-b border-slate-800 px-3 py-1.5 shrink-0 overflow-x-auto no-scrollbar z-20">
+    <div class="flex items-center gap-1.5 min-w-max">
+      <button data-mobile-mode="SA" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-800 text-slate-300 whitespace-nowrap">
+        <span>1. بسيطة (SA)</span>
+      </button>
+
+      <button data-mobile-mode="DA" class="px-3 py-1.5 rounded-xl text-xs font-black bg-blue-600 text-white shadow-md whitespace-nowrap">
+        <span>2. مزدوجة (DA) [قاطعتان]</span>
+      </button>
+
+      <button data-mobile-mode="VV" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-800 text-slate-300 whitespace-nowrap">
+        <span>3. ذهاب/إياب (VV)</span>
+      </button>
+
+      <button data-mobile-mode="TL" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-800 text-slate-300 whitespace-nowrap">
+        <span>4. مرحل نبضي (TL)</span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- SUB-BAR FOR VA-ET-VIENT INTERNATIONAL VARIANTS -->
+  <div id="mobileVvBar" class="bg-slate-950 border-b border-slate-800 px-3 py-1 shrink-0 overflow-x-auto hidden z-20">
+    <div class="flex items-center gap-1.5 min-w-max">
+      <span class="text-[10px] text-amber-400 font-bold ml-1">المعيار:</span>
+      <button data-mobile-vv-variant="FR" class="px-2.5 py-1 rounded-lg text-xs font-bold bg-amber-600 text-white shadow whitespace-nowrap">
+        <span>🇫🇷 فرنسي (NFC)</span>
+      </button>
+      <button data-mobile-vv-variant="DE" class="px-2.5 py-1 rounded-lg text-xs font-bold bg-slate-800 text-slate-300 whitespace-nowrap">
+        <span>🇩🇪 ألماني (VDE)</span>
+      </button>
+      <button data-mobile-vv-variant="US" class="px-2.5 py-1 rounded-lg text-xs font-bold bg-slate-800 text-slate-300 whitespace-nowrap">
+        <span>🇺🇸 أمريكي (NEC)</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- MAIN CANVAS WORKBENCH AREA -->
+  <main class="relative flex-1 w-full bg-slate-950 overflow-hidden">
+    
+    <!-- Wire Connection Prompt Banner (When pin selected) -->
+    <div id="mobileWirePrompt" class="hidden absolute top-2 inset-x-3 z-30 bg-emerald-950/95 border border-emerald-600/60 shadow-xl px-3 py-2 rounded-xl flex items-center justify-between text-xs text-white backdrop-blur">
+      <div class="flex items-center gap-2 truncate">
+        <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse shrink-0"></span>
+        <span class="truncate">انقر على الطرف الهدف للربط من: <b id="mobileSelectedPinName" class="text-emerald-300 font-mono-tech">L</b></span>
+      </div>
+      <button id="btnCancelMobileWire" class="px-2 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-[11px] font-bold shrink-0 mr-1">
+        إلغاء ✕
+      </button>
+    </div>
+
+    <!-- Selected Wire Action Bar -->
+    <div id="mobileWireActionBar" class="hidden absolute top-2 inset-x-3 z-30 bg-slate-900/95 border border-blue-500/60 shadow-xl px-3 py-2 rounded-xl flex items-center justify-between text-xs text-white backdrop-blur">
+      <div class="flex items-center gap-1.5">
+        <i class="fa-solid fa-bolt text-blue-400"></i>
+        <span>سلك محدد (اختر لوناً لتغييره)</span>
+      </div>
+      <button id="btnDeleteMobileWire" class="px-3 py-1 bg-rose-600 hover:bg-rose-500 text-white rounded-lg text-xs font-bold shadow flex items-center gap-1">
+        <i class="fa-solid fa-trash-can"></i>
+        <span>حذف</span>
+      </button>
+    </div>
+
+    <!-- Canvas -->
+    <div class="w-full h-full canvas-wrapper relative">
+      <canvas id="mobileCircuitCanvas" class="block w-full h-full"></canvas>
+    </div>
+
+    <!-- Floating Help Tip -->
+    <div class="absolute bottom-2 left-3 right-3 pointer-events-none text-center">
+      <span class="inline-block px-3 py-1 rounded-full bg-slate-950/80 border border-slate-800 text-[10px] text-slate-400 shadow">
+        💡 اضغط على أي مأخذ (Borne) لبدء السلك ثم اضغط على المأخذ الهدف للتوصيل
+      </span>
+    </div>
+
+  </main>
+
+  <!-- FIXED BOTTOM MOBILE CONTROLS -->
+  <footer class="bg-slate-900 border-t border-slate-800 px-3 py-2 flex flex-col gap-2 shrink-0 z-30 safe-bottom shadow-2xl">
+    
+    <!-- Wire Color Selector Row -->
+    <div class="flex items-center justify-between gap-1 overflow-x-auto pb-0.5">
+      <span class="text-[11px] font-black text-slate-400 ml-1 whitespace-nowrap">اللون:</span>
+
+      <!-- Red Phase -->
+      <button data-mobile-color="#dc2626" data-mobile-wire-type="phase" class="w-8 h-8 rounded-full bg-rose-600 border-2 border-slate-800 flex items-center justify-center text-white ring-4 ring-white shadow transition shrink-0" title="Phase (أحمر)">
+        <span class="text-[10px] font-bold">L</span>
+      </button>
+
+      <!-- Blue Neutral -->
+      <button data-mobile-color="#2563eb" data-mobile-wire-type="neutre" class="w-8 h-8 rounded-full bg-blue-600 border-2 border-slate-800 flex items-center justify-center text-white shadow transition shrink-0" title="Neutre (أزرق)">
+        <span class="text-[10px] font-bold">N</span>
+      </button>
+
+      <!-- Yellow/Green Earth -->
+      <button data-mobile-color="#16a34a" data-mobile-wire-type="terre" class="w-8 h-8 rounded-full bg-earth-stripes border-2 border-slate-800 flex items-center justify-center text-slate-900 shadow transition shrink-0" title="Terre PE">
+        <span class="text-[10px] font-black">PE</span>
+      </button>
+
+      <!-- Black Retour -->
+      <button data-mobile-color="#18181b" data-mobile-wire-type="retour" class="w-8 h-8 rounded-full bg-zinc-950 border-2 border-slate-600 flex items-center justify-center text-white shadow transition shrink-0" title="Retour (أسود)">
+        <span class="text-[10px] font-bold">R</span>
+      </button>
+
+      <!-- Brown Retour -->
+      <button data-mobile-color="#78350f" data-mobile-wire-type="retour" class="w-8 h-8 rounded-full bg-amber-800 border-2 border-slate-800 flex items-center justify-center text-white shadow transition shrink-0" title="Retour (بني)">
+        <span class="text-[10px] font-bold">M</span>
+      </button>
+
+      <!-- Orange Navette -->
+      <button data-mobile-color="#ea580c" data-mobile-wire-type="navette" class="w-8 h-8 rounded-full bg-orange-600 border-2 border-slate-800 flex items-center justify-center text-white shadow transition shrink-0" title="Navette (برتقالي)">
+        <span class="text-[10px] font-bold">V</span>
+      </button>
+
+      <button id="btnToggleAuditSheet" class="px-2.5 py-1.5 rounded-xl bg-slate-800 text-sky-300 text-[11px] font-bold border border-slate-700 flex items-center gap-1 shrink-0 ml-auto shadow">
+        <i class="fa-solid fa-clipboard-check text-sky-400"></i>
+        <span>التقرير</span>
+      </button>
+    </div>
+
+    <!-- Quick Action Buttons Row -->
+    <div class="grid grid-cols-4 gap-1.5">
+      <button id="btnMobileTest" class="col-span-2 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 text-white text-xs font-black shadow-lg shadow-emerald-700/30 flex items-center justify-center gap-1.5">
+        <i class="fa-solid fa-play"></i>
+        <span>اختبار الدائرة (Tester)</span>
+      </button>
+
+      <button id="btnMobileSolution" class="py-2.5 rounded-xl bg-indigo-600/30 text-indigo-300 text-xs font-bold border border-indigo-500/40 flex items-center justify-center gap-1">
+        <i class="fa-solid fa-wand-magic-sparkles text-indigo-400"></i>
+        <span>الحل</span>
+      </button>
+
+      <button id="btnMobileUndo" class="py-2.5 rounded-xl bg-slate-800 text-slate-300 text-xs font-bold border border-slate-700 flex items-center justify-center gap-1">
+        <i class="fa-solid fa-rotate-left"></i>
+        <span>تراجع</span>
+      </button>
+    </div>
+
+  </footer>
+
+  <!-- MOBILE BOTTOM SHEET: AUDIT & DIAGNOSTICS REPORT -->
+  <div id="mobileAuditSheet" class="fixed inset-x-0 bottom-0 z-50 bg-slate-900 border-t border-slate-800 rounded-t-3xl shadow-2xl p-4 transition-transform duration-300 transform translate-y-full max-h-[75vh] flex flex-col gap-3">
+    
+    <!-- Drawer Handle -->
+    <div class="w-12 h-1.5 rounded-full bg-slate-700 mx-auto -mt-1 cursor-pointer" onclick="document.getElementById('mobileAuditSheet').classList.add('translate-y-full')"></div>
+
+    <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+      <div class="flex items-center gap-2">
+        <i class="fa-solid fa-clipboard-check text-blue-400 text-base"></i>
+        <h3 class="text-sm font-bold text-white">تقرير فحص الدائرة (NFC 15-100)</h3>
+      </div>
+      <button id="btnCloseAuditSheet" class="text-slate-400 hover:text-white p-1 text-base">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+
+    <!-- Audit Status Badge & Message -->
+    <div class="flex items-center justify-between gap-2">
+      <span id="mobileAuditBadge" class="px-2.5 py-1 rounded-full text-xs font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30">
+        ○ بانتظار الفحص
+      </span>
+      <span class="text-[11px] text-slate-400 font-tech">معايير السلامة والتسلسل</span>
+    </div>
+
+    <div id="mobileAuditSummary" class="p-2.5 rounded-xl bg-slate-950 border border-slate-800 text-xs text-slate-300 leading-relaxed font-semibold">
+      اضغط على "اختبار الدائرة" أو انقر مباشرة على مفاتيح القواطع لتجربة التوصيل ورؤية توهج المصابيح.
+    </div>
+
+    <!-- Checklist Container -->
+    <div class="overflow-y-auto max-h-[40vh] flex flex-col gap-2" id="mobileAuditChecklist">
+      <!-- Injected dynamically by mobile-app.js -->
+    </div>
+
+    <button onclick="document.getElementById('mobileAuditSheet').classList.add('translate-y-full')" class="w-full py-2.5 rounded-xl bg-slate-800 text-slate-200 text-xs font-bold border border-slate-700 mt-1">
+      إغلاق التقرير
+    </button>
+  </div>
+
+  <!-- TOAST NOTIFICATION FOR MOBILE -->
+  <div id="mobileToast" class="fixed top-16 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-full text-xs font-bold shadow-2xl transition-all duration-300 opacity-0 pointer-events-none bg-slate-800 text-white border border-slate-700"></div>
+
+  <!-- APPLICATION SCRIPTS -->
+  <script src="js/audio.js"></script>
+  <script src="js/components.js"></script>
+  <script src="js/mobile-components.js"></script>
+  <script src="js/wire-router.js"></script>
+  <script src="js/engine.js"></script>
+  <script src="js/backup.js"></script>
+  <script src="js/mobile-app.js"></script>
+</body>
+</html>

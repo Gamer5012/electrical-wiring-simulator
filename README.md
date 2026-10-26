@@ -38,9 +38,21 @@
 
 ---
 
-### 🌐 التشغيل المباشر عبر المتصفح (Live Demo):
-يمكنك تجربة ومشاركة المحاكي فوراً عبر الرابط العام المباشر:
-👉 **[https://gamer5012.github.io/electrical-wiring-simulator/](https://gamer5012.github.io/electrical-wiring-simulator/)**
+### 📱 نسخة مخصصة للهواتف الذكية (Version Mobile Dédiée):
+تتضمن الحزمة نسخة كاملة مخصصة للهواتف والشاشات اللمسية (`mobile.html`) بتصميم رأسي مريح (Portrait Layout) وميزات متقدمة:
+- نظام توصيل باللمس المباشر (Tap-to-Wire) مع مؤشرات توهج تفاعلية.
+- أهداف لمسية واسعة للمآخذ (26px+ Touch Targets) لسهولة التوصيل بالأصابع دون تعقيد.
+- لوحة سفلية قابلة للسحب (Bottom Sheet Drawer) لعرض نتائج فحص ومطابقة المعايير (NFC 15-100).
+- تجاوب مع الاهتزاز اللمسي (Haptic Feedback) عند التوصيل وتغيير الأوضاع.
+- تنقل فوري وسلس بين نسخة الهاتف ونسخة الحاسوب بنقرة زر واحدة.
+
+![معاينة نسخة الهاتف](screenshot_mobile.png)
+
+---
+
+### 🌐 روابط التشغيل المباشر عبر الإنترنت (Live Demo):
+- 💻 **نسخة الحاسوب المكتبية (Desktop):** [https://gamer5012.github.io/electrical-wiring-simulator/](https://gamer5012.github.io/electrical-wiring-simulator/)
+- 📱 **نسخة الهاتف المحمول (Mobile):** [https://gamer5012.github.io/electrical-wiring-simulator/mobile.html](https://gamer5012.github.io/electrical-wiring-simulator/mobile.html)
 
 ### 💻 التشغيل المحلي (Local Run):
 ```bash

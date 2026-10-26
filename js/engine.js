@@ -760,4 +760,5 @@ class CircuitEngine {
   }
 }
 
+window.CircuitEngine = CircuitEngine;
 window.circuitEngine = new CircuitEngine(window.componentManager, window.wireRouter);
