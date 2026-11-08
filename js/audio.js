@@ -202,6 +202,34 @@ class SoundEngine {
   }
 
   // Harmonic validation chord
+  // Exam Success Bell (Celebratory Chime)
+  playSuccessBell() {
+    this.playSuccessChime();
+  }
+
+  // Exam Advisory / Incomplete Warning Sound (Soft Descending Two-Tone)
+  playWarningSound() {
+    if (!this.enabled) return;
+    this.init();
+    if (!this.audioCtx) return;
+
+    const ctx = this.audioCtx;
+    const notes = [440.0, 329.63]; // A4 -> E4
+    notes.forEach((freq, idx) => {
+      const now = ctx.currentTime + idx * 0.12;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(freq, now);
+      gain.gain.setValueAtTime(0.15, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(now);
+      osc.stop(now + 0.35);
+    });
+  }
+
   playSuccessChime() {
     if (!this.enabled) return;
     this.init();

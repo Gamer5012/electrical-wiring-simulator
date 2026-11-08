@@ -135,3 +135,57 @@ body {
 #toastContainer > div {
   box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.4);
 }
+
+
+/* ==========================================
+   EXAM MODE STYLES & ANIMATIONS
+   ========================================== */
+
+@keyframes exam-timer-warning {
+  0%, 100% {
+    background-color: rgba(225, 29, 72, 0.2);
+    border-color: rgba(225, 29, 72, 0.6);
+    transform: scale(1);
+  }
+  50% {
+    background-color: rgba(225, 29, 72, 0.4);
+    border-color: rgba(225, 29, 72, 1);
+    transform: scale(1.03);
+  }
+}
+
+.exam-timer-urgent {
+  animation: exam-timer-warning 1s infinite ease-in-out;
+  color: #f43f5e !important;
+}
+
+@keyframes exam-badge-glow {
+  0%, 100% {
+    box-shadow: 0 0 15px rgba(245, 158, 11, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 25px rgba(245, 158, 11, 0.6);
+  }
+}
+
+.exam-badge-active {
+  animation: exam-badge-glow 2s infinite ease-in-out;
+}
+
+.exam-modal-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: #475569 #1e293b;
+}
+
+.exam-modal-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+
+.exam-modal-scroll::-webkit-scrollbar-track {
+  background: #1e293b;
+}
+
+.exam-modal-scroll::-webkit-scrollbar-thumb {
+  background-color: #475569;
+  border-radius: 4px;
+}

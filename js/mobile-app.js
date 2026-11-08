@@ -28,6 +28,10 @@ class MobileSimulatorApp {
     this.currentMode = 'DA';
     this.vvVariant = 'FR';
     this.animationId = null;
+
+    // Mobile Exam Mode
+    this.examManager = null;
+    this.activeExamTypeTab = 'build';
   }
 
   init() {
@@ -55,6 +59,12 @@ class MobileSimulatorApp {
     if (window.BackupManager) {
       this.backupManager = new window.BackupManager(this);
       this.backupManager.init();
+    }
+
+    // Initialize Mobile Exam Manager
+    if (window.ExamSessionManager) {
+      this.examManager = new window.ExamSessionManager(this);
+      this.initMobileExamMode();
     }
 
     this.resizeCanvas();
@@ -375,6 +385,9 @@ class MobileSimulatorApp {
   }
 
   processInteraction(coords) {
+    if (this.examManager && this.examManager.isExamSubmitted) {
+      return;
+    }
     this.touchPos = coords;
 
     // 1. Check if clicking/tapping a terminal pin (with generous 40px magnetic tolerance!)
@@ -479,6 +492,10 @@ class MobileSimulatorApp {
   }
 
   setCircuitMode(mode) {
+    if (this.examManager && this.examManager.isExamActive && !this.examManager.isExamSubmitted) {
+      this.showToast('لا يمكن تغيير الدارة أثناء الامتحان النشط', 'error');
+      return;
+    }
     this.currentMode = mode;
     this.cm.setMode(mode, this.vvVariant);
     this.wr.clear();
@@ -542,6 +559,16 @@ class MobileSimulatorApp {
       this.engine = window.circuitEngine;
     }
     if (!this.engine) return;
+
+    if (this.examManager && this.examManager.isExamActive && !this.examManager.isExamSubmitted) {
+      this.updateDiagnosticsUI({
+        status: 'exam',
+        generalMessageAr: '🎯 وضع الامتحان نشط: النتائج والتقييم النهائي تظهر فور تسليم الامتحان.',
+        checks: []
+      });
+      return;
+    }
+
     const report = this.engine.evaluateAudit();
     this.updateDiagnosticsUI(report);
   }
@@ -623,6 +650,425 @@ class MobileSimulatorApp {
     setTimeout(() => {
       toast.classList.add('opacity-0', 'pointer-events-none');
     }, 2500);
+  }
+
+  // ==========================================
+  // MOBILE EXAM MODE CONTROLLER
+  // ==========================================
+
+  initMobileExamMode() {
+    if (!this.examManager) return;
+
+    this.examManager.onTimerTick = (rem, tot) => this.updateMobileExamTimer(rem, tot);
+    this.examManager.onTimerExpired = () => this.autoSubmitMobileExam();
+
+    // Top Header Button: Open Exam
+    const btnOpenExam = document.getElementById('btnMobileOpenExam');
+    if (btnOpenExam) {
+      btnOpenExam.addEventListener('click', () => {
+        this.triggerHaptic(20);
+        this.openMobileExamSelection();
+      });
+    }
+
+    // Type Switcher Tabs in Selection Sheet
+    const tabA = document.getElementById('tabMobileExamTypeA');
+    const tabB = document.getElementById('tabMobileExamTypeB');
+    if (tabA && tabB) {
+      tabA.addEventListener('click', () => {
+        this.activeExamTypeTab = 'build';
+        tabA.className = 'flex-1 py-1.5 rounded-lg text-xs font-bold bg-blue-600 text-white shadow';
+        tabB.className = 'flex-1 py-1.5 rounded-lg text-xs font-bold bg-slate-900 text-slate-400';
+        this.renderMobileExamExercises('build');
+      });
+
+      tabB.addEventListener('click', () => {
+        this.activeExamTypeTab = 'fault';
+        tabB.className = 'flex-1 py-1.5 rounded-lg text-xs font-bold bg-amber-600 text-white shadow';
+        tabA.className = 'flex-1 py-1.5 rounded-lg text-xs font-bold bg-slate-900 text-slate-400';
+        this.renderMobileExamExercises('fault');
+      });
+    }
+
+    // Sticky Bar Buttons
+    const btnTasks = document.getElementById('btnMobileExamTasks');
+    if (btnTasks) {
+      btnTasks.addEventListener('click', () => {
+        this.openMobileTasksSheet();
+      });
+    }
+
+    const btnSubmit = document.getElementById('btnMobileExamSubmit');
+    if (btnSubmit) {
+      btnSubmit.addEventListener('click', () => {
+        const modal = document.getElementById('mobileExamConfirmModal');
+        const timerBadge = document.getElementById('mobileExamTimerBadge');
+        const confirmTimer = document.getElementById('mobileExamConfirmTimer');
+        if (timerBadge && confirmTimer) confirmTimer.textContent = timerBadge.textContent;
+        if (modal) modal.classList.remove('hidden');
+      });
+    }
+
+    const btnCancelSubmit = document.getElementById('btnMobileCancelSubmit');
+    if (btnCancelSubmit) {
+      btnCancelSubmit.addEventListener('click', () => {
+        const modal = document.getElementById('mobileExamConfirmModal');
+        if (modal) modal.classList.add('hidden');
+      });
+    }
+
+    const btnExecSubmit = document.getElementById('btnMobileExecuteSubmit');
+    if (btnExecSubmit) {
+      btnExecSubmit.addEventListener('click', () => {
+        const modal = document.getElementById('mobileExamConfirmModal');
+        if (modal) modal.classList.add('hidden');
+        this.submitMobileExam();
+      });
+    }
+
+    const btnCancelExam = document.getElementById('btnMobileExamCancel');
+    if (btnCancelExam) {
+      btnCancelExam.addEventListener('click', () => {
+        if (confirm('هل تريد إلغاء الامتحان والعودة إلى لوحة العمل السابقة؟')) {
+          this.cancelMobileExam();
+        }
+      });
+    }
+
+    // Results Sheet Buttons
+    const btnCloseResults = document.getElementById('btnCloseMobileResults');
+    if (btnCloseResults) {
+      btnCloseResults.addEventListener('click', () => {
+        const sheet = document.getElementById('mobileExamResultsSheet');
+        if (sheet) sheet.classList.add('hidden');
+      });
+    }
+
+    const btnInspect = document.getElementById('btnMobileInspectCanvas');
+    if (btnInspect) {
+      btnInspect.addEventListener('click', () => {
+        const sheet = document.getElementById('mobileExamResultsSheet');
+        if (sheet) sheet.classList.add('hidden');
+        this.showToast('يمكنك الآن فحص اللوحة ومعاينة التوصيل', 'info');
+      });
+    }
+
+    const btnFinish = document.getElementById('btnMobileFinishRestore');
+    if (btnFinish) {
+      btnFinish.addEventListener('click', () => {
+        this.exitMobileExam();
+      });
+    }
+
+    // History Buttons
+    const btnOpenHist = document.getElementById('btnMobileOpenHistory');
+    if (btnOpenHist) {
+      btnOpenHist.addEventListener('click', () => {
+        const selSheet = document.getElementById('mobileExamSelectionSheet');
+        if (selSheet) selSheet.classList.add('hidden');
+        this.openMobileExamHistory();
+      });
+    }
+
+    const btnClearHist = document.getElementById('btnMobileClearHistory');
+    if (btnClearHist) {
+      btnClearHist.addEventListener('click', () => {
+        if (confirm('هل تريد مسح سجل الامتحانات السابقة بالكامل؟')) {
+          this.examManager.clearExamHistory();
+          this.renderMobileExamHistory();
+          this.showToast('تم مسح سجل النتائج', 'info');
+        }
+      });
+    }
+  }
+
+  openMobileExamSelection() {
+    if (this.examManager && this.examManager.isExamActive && !this.examManager.isExamSubmitted) {
+      this.showToast('امتحان قيد التنفيذ! يرجى تسليمه أو إلغاؤه', 'error');
+      return;
+    }
+    const sheet = document.getElementById('mobileExamSelectionSheet');
+    if (sheet) sheet.classList.remove('hidden');
+    this.renderMobileExamExercises(this.activeExamTypeTab);
+  }
+
+  renderMobileExamExercises(type) {
+    const container = document.getElementById('mobileExamExercisesContainer');
+    if (!container || !this.examManager) return;
+
+    const exercises = this.examManager.getExercises().filter(ex => ex.type === type);
+    container.innerHTML = '';
+
+    exercises.forEach(ex => {
+      const card = document.createElement('div');
+      card.className = 'p-3 rounded-2xl bg-slate-950 border border-slate-800 flex flex-col gap-2';
+
+      const diffBadge = ex.difficulty === 'easy'
+        ? '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-300">مبتدئ</span>'
+        : ex.difficulty === 'medium'
+        ? '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/20 text-amber-300">متوسط</span>'
+        : '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-500/20 text-rose-300">متقدم</span>';
+
+      card.innerHTML = `
+        <div class="flex items-center justify-between gap-2">
+          <div class="flex items-center gap-1.5 overflow-hidden">
+            <h4 class="text-xs font-bold text-white truncate">${ex.titleAr}</h4>
+            ${diffBadge}
+          </div>
+          <span class="text-[10px] text-amber-300 font-mono-tech shrink-0">${ex.durationMinutes} دقيقة</span>
+        </div>
+        <p class="text-[11px] text-slate-300 leading-relaxed">${ex.descriptionAr}</p>
+        <div class="flex items-center justify-between pt-1">
+          <span class="text-[10px] text-slate-400">علامة النجاح: ${ex.passingScore}/100</span>
+          <button data-mobile-start="${ex.id}" class="px-3 py-1.5 rounded-xl bg-blue-600 text-white text-xs font-black shadow flex items-center gap-1">
+            <i class="fa-solid fa-play"></i>
+            <span>بدء</span>
+          </button>
+        </div>
+      `;
+
+      const startBtn = card.querySelector(`[data-mobile-start="${ex.id}"]`);
+      if (startBtn) {
+        startBtn.addEventListener('click', () => {
+          this.startMobileExam(ex.id);
+        });
+      }
+
+      container.appendChild(card);
+    });
+  }
+
+  startMobileExam(exerciseId) {
+    if (!this.examManager) return;
+    const ok = this.examManager.startExam(exerciseId);
+    if (!ok) return;
+
+    const sheet = document.getElementById('mobileExamSelectionSheet');
+    if (sheet) sheet.classList.add('hidden');
+
+    const activeBar = document.getElementById('mobileExamActiveBar');
+    const titleEl = document.getElementById('mobileExamActiveTitle');
+    const ex = this.examManager.currentExercise;
+
+    if (activeBar) activeBar.classList.remove('hidden');
+    if (titleEl) titleEl.textContent = ex.titleAr;
+
+    const btnSol = document.getElementById('btnMobileSolution');
+    if (btnSol) btnSol.classList.add('hidden');
+
+    this.showToast(`🎯 بدأ امتحان: ${ex.titleAr}`, 'success');
+  }
+
+  updateMobileExamTimer(remainingSeconds, totalSeconds) {
+    const badge = document.getElementById('mobileExamTimerBadge');
+    if (!badge) return;
+
+    const mins = Math.floor(Math.max(0, remainingSeconds) / 60);
+    const secs = Math.max(0, remainingSeconds) % 60;
+    badge.textContent = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+
+    if (remainingSeconds <= 60) {
+      badge.className = 'px-2 py-0.5 rounded-lg bg-rose-950 border border-rose-500 font-mono-tech text-xs font-black text-rose-300 animate-pulse';
+    } else {
+      badge.className = 'px-2 py-0.5 rounded-lg bg-slate-900 border border-amber-500/40 font-mono-tech text-xs font-black text-amber-300';
+    }
+  }
+
+  openMobileTasksSheet() {
+    if (!this.examManager || !this.examManager.currentExercise) return;
+    const ex = this.examManager.currentExercise;
+
+    const sheet = document.getElementById('mobileExamTasksSheet');
+    const title = document.getElementById('mobileExamTasksTitle');
+    const desc = document.getElementById('mobileExamTasksDesc');
+    const list = document.getElementById('mobileExamTasksList');
+
+    if (title) title.textContent = `مهمة: ${ex.titleAr}`;
+    if (desc) desc.textContent = ex.descriptionAr;
+    if (list) {
+      list.innerHTML = '';
+      (ex.tasksAr || []).forEach(t => {
+        const li = document.createElement('li');
+        li.className = 'p-2 rounded-lg bg-slate-950 border border-slate-800 text-slate-300';
+        li.innerHTML = `<span class="text-sky-400 ml-1">•</span>${t}`;
+        list.appendChild(li);
+      });
+    }
+
+    if (sheet) sheet.classList.remove('hidden');
+  }
+
+  submitMobileExam() {
+    if (!this.examManager) return;
+    const report = this.examManager.submitExam(false);
+    if (!report) return;
+
+    if (window.soundEngine) {
+      if (report.passed) window.soundEngine.playSuccessBell();
+      else window.soundEngine.playWarningSound();
+    }
+
+    this.renderMobileExamResults(report);
+  }
+
+  autoSubmitMobileExam() {
+    if (!this.examManager) return;
+    const report = this.examManager.submitExam(true);
+    if (!report) return;
+
+    this.showToast('⏰ انتهى الوقت! تم تسليم الامتحان', 'warning');
+    this.renderMobileExamResults(report);
+  }
+
+  cancelMobileExam() {
+    if (!this.examManager) return;
+    this.examManager.cancelExam();
+
+    const activeBar = document.getElementById('mobileExamActiveBar');
+    if (activeBar) activeBar.classList.add('hidden');
+
+    const btnSol = document.getElementById('btnMobileSolution');
+    if (btnSol) btnSol.classList.remove('hidden');
+
+    this.showToast('تم إلغاء الامتحان واستعادة اللوحة السابقة', 'info');
+  }
+
+  exitMobileExam() {
+    if (!this.examManager) return;
+    this.examManager.exitExamMode();
+
+    const sheet = document.getElementById('mobileExamResultsSheet');
+    if (sheet) sheet.classList.add('hidden');
+
+    const activeBar = document.getElementById('mobileExamActiveBar');
+    if (activeBar) activeBar.classList.add('hidden');
+
+    const btnSol = document.getElementById('btnMobileSolution');
+    if (btnSol) btnSol.classList.remove('hidden');
+
+    this.showToast('تم إنهاء المراجعة واستعادة اللوحة السابقة', 'success');
+  }
+
+  renderMobileExamResults(report) {
+    const sheet = document.getElementById('mobileExamResultsSheet');
+    if (!sheet || !report) return;
+
+    const scoreEl = document.getElementById('mobileResultScore');
+    const statusEl = document.getElementById('mobileResultStatus');
+    const feedbackEl = document.getElementById('mobileResultFeedback');
+
+    if (scoreEl) scoreEl.textContent = `${report.totalScore}/100`;
+    if (statusEl) {
+      statusEl.className = `inline-block mt-1 px-2 py-0.5 rounded-full text-[10px] font-black ${
+        report.passed ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : 'bg-rose-500/20 text-rose-300 border border-rose-500/30'
+      }`;
+      statusEl.textContent = report.passed ? '● ناجح مؤهل (Admis)' : '✕ بحاجة لإعادة المحاولة';
+    }
+
+    const sConn = document.getElementById('mobileScoreConn');
+    const sRel = document.getElementById('mobileScoreRel');
+    const sCol = document.getElementById('mobileScoreColors');
+    const sHyg = document.getElementById('mobileScoreHyg');
+    if (sConn) sConn.textContent = `${report.scoreBreakdown.connections}/${report.scoreBreakdown.maxConnections}`;
+    if (sRel) sRel.textContent = `${report.scoreBreakdown.relationships}/${report.scoreBreakdown.maxRelationships}`;
+    if (sCol) sCol.textContent = `${report.scoreBreakdown.colors}/${report.scoreBreakdown.maxColors}`;
+    if (sHyg) sHyg.textContent = `${report.scoreBreakdown.hygiene}/${report.scoreBreakdown.maxHygiene}`;
+
+    if (feedbackEl) feedbackEl.textContent = report.generalFeedbackAr;
+
+    // Faults list
+    const fBox = document.getElementById('mobileFaultsBox');
+    const fList = document.getElementById('mobileFaultsList');
+    if (fBox && fList) {
+      if (report.exerciseType === 'fault' && report.faultsStatus && report.faultsStatus.length > 0) {
+        fBox.classList.remove('hidden');
+        fList.innerHTML = '';
+        report.faultsStatus.forEach(f => {
+          const row = document.createElement('div');
+          row.className = `p-1.5 rounded-lg border text-[10px] flex items-center justify-between ${
+            f.resolved ? 'bg-emerald-950/40 border-emerald-800 text-emerald-300' : 'bg-rose-950/40 border-rose-800 text-rose-300'
+          }`;
+          row.innerHTML = `<span>${f.descriptionAr}</span><span class="font-bold">${f.resolved ? 'تم الإصلاح ✓' : 'لم يُصلح ✕'}</span>`;
+          fList.appendChild(row);
+        });
+      } else {
+        fBox.classList.add('hidden');
+      }
+    }
+
+    // Connections checklist
+    const cList = document.getElementById('mobileResultDetailsList');
+    if (cList) {
+      cList.innerHTML = '';
+      (report.connectionDetails || []).forEach(c => {
+        const row = document.createElement('div');
+        row.className = `p-1.5 rounded-lg border flex items-center justify-between text-[11px] ${
+          c.satisfied ? 'bg-slate-950 border-emerald-800/40 text-slate-200' : 'bg-rose-950/30 border-rose-800/40 text-slate-300'
+        }`;
+        row.innerHTML = `
+          <div class="flex items-center gap-1.5 overflow-hidden">
+            <span class="${c.satisfied ? 'text-emerald-400' : 'text-rose-400'} font-bold">${c.satisfied ? '✓' : '✕'}</span>
+            <span class="truncate">${c.nameAr}</span>
+          </div>
+          <span class="font-mono-tech font-bold ${c.satisfied ? 'text-emerald-400' : 'text-rose-400'} shrink-0">+${c.earned}/${c.points}</span>
+        `;
+        cList.appendChild(row);
+      });
+    }
+
+    sheet.classList.remove('hidden');
+  }
+
+  openMobileExamHistory() {
+    const sheet = document.getElementById('mobileExamHistorySheet');
+    if (sheet) sheet.classList.remove('hidden');
+    this.renderMobileExamHistory();
+  }
+
+  renderMobileExamHistory() {
+    const container = document.getElementById('mobileExamHistoryList');
+    const emptyEl = document.getElementById('mobileExamHistoryEmpty');
+    if (!container || !this.examManager) return;
+
+    const list = this.examManager.getExamHistory();
+    if (list.length === 0) {
+      container.innerHTML = '';
+      if (emptyEl) emptyEl.classList.remove('hidden');
+      return;
+    }
+
+    if (emptyEl) emptyEl.classList.add('hidden');
+    container.innerHTML = '';
+
+    list.forEach(item => {
+      const card = document.createElement('div');
+      card.className = 'p-2.5 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-between gap-2';
+      card.innerHTML = `
+        <div class="overflow-hidden">
+          <div class="flex items-center gap-1.5">
+            <span class="font-bold text-xs text-white truncate">${item.exerciseTitleAr}</span>
+            <span class="text-[9px] px-1.5 py-0.2 rounded font-bold ${item.passed ? 'bg-emerald-500/20 text-emerald-300' : 'bg-rose-500/20 text-rose-300'}">${item.passed ? 'ناجح' : 'راسب'}</span>
+          </div>
+          <div class="text-[10px] text-slate-400 mt-0.5">${item.dateStr}</div>
+        </div>
+        <div class="flex items-center gap-2 shrink-0">
+          <span class="font-mono-tech text-xs font-black ${item.passed ? 'text-emerald-400' : 'text-rose-400'}">${item.totalScore}/100</span>
+          <button data-del-mob-id="${item.id}" class="text-rose-400 text-xs p-1">
+            <i class="fa-solid fa-trash-can"></i>
+          </button>
+        </div>
+      `;
+
+      const delBtn = card.querySelector(`[data-del-mob-id="${item.id}"]`);
+      if (delBtn) {
+        delBtn.addEventListener('click', () => {
+          this.examManager.deleteExamHistoryItem(item.id);
+          this.renderMobileExamHistory();
+        });
+      }
+
+      container.appendChild(card);
+    });
   }
 
   startLoop() {

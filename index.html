@@ -81,9 +81,19 @@
           <span>📱 نسخة الهاتف</span>
         </a>
 
+        <button id="btnOpenExamModal" class="btn-action px-3.5 py-1.5 rounded-lg bg-gradient-to-r from-amber-500 via-rose-500 to-red-600 hover:from-amber-400 hover:to-red-500 text-white text-xs font-black shadow-lg shadow-rose-600/30 flex items-center gap-1.5 border border-rose-400/40" title="نظام الامتحانات المهنية وتقييم التوصيلات">
+          <i class="fa-solid fa-graduation-cap text-yellow-200 text-sm"></i>
+          <span>🎯 وضع الامتحان (Mode Examen)</span>
+        </button>
+
         <button id="btnCreateBackup" class="btn-action px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold border border-emerald-500 shadow-lg shadow-emerald-600/20 flex items-center gap-1.5" title="حفظ نسخة احتياطية فورية في المتصفح">
           <i class="fa-solid fa-floppy-disk"></i>
           <span>💾 إنشاء نسخة احتياطية</span>
+        </button>
+
+        <button id="btnOpenExamHistory" class="btn-action px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-amber-300 text-xs font-bold border border-slate-700 flex items-center gap-1.5" title="سجل الامتحانات والنتائج السابقة">
+          <i class="fa-solid fa-award text-amber-400"></i>
+          <span>سجل الامتحانات (Historique)</span>
         </button>
 
         <button id="btnHistoryModal" class="btn-action px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-teal-300 text-xs font-bold border border-slate-700 flex items-center gap-1.5" title="استعراض واستعادة النسخ الاحتياطية وتصدير/استيراد JSON">
@@ -208,6 +218,50 @@
         <span>اسحب أي جهاز لتحريكه بحرية | انقر لتحديده وتعديله أو حذفه</span>
       </div>
 
+    </div>
+  </div>
+
+  <!-- ACTIVE EXAM TOP BANNER -->
+  <div id="examActiveBar" class="hidden bg-gradient-to-r from-slate-950 via-rose-950/80 to-slate-950 border-b-2 border-rose-500/70 px-4 py-2.5 shadow-2xl transition-all z-20">
+    <div class="max-w-7xl mx-auto flex items-center justify-between gap-4 flex-wrap">
+      <div class="flex items-center gap-3">
+        <span class="px-2.5 py-1 rounded-full text-xs font-black bg-rose-500/30 text-rose-300 border border-rose-500/50 flex items-center gap-1.5">
+          <i class="fa-solid fa-graduation-cap text-amber-300 animate-bounce"></i>
+          <span id="examActiveBadgeType">امتحان مهني نشط</span>
+        </span>
+        <div>
+          <h3 id="examActiveTitle" class="text-sm font-bold text-white flex items-center gap-2">
+            عنوان الامتحان
+          </h3>
+          <p id="examActiveSubtitle" class="text-xs text-slate-300 font-tech">
+            Titre de l'épreuve
+          </p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-3 flex-wrap">
+        <!-- Countdown Timer -->
+        <div id="examTimerContainer" class="flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-slate-900 border border-amber-500/40 shadow-inner">
+          <i class="fa-regular fa-clock text-amber-400 text-sm"></i>
+          <span class="text-xs text-slate-400 font-bold">الوقت المتبقي:</span>
+          <span id="examTimerDisplay" class="font-mono-tech text-sm font-black text-amber-300 tracking-wider">10:00</span>
+        </div>
+
+        <button id="btnExamViewTasks" class="btn-action px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-sky-300 text-xs font-bold border border-slate-700 flex items-center gap-1.5">
+          <i class="fa-solid fa-list-check text-sky-400"></i>
+          <span>تعليمات المهمة (Consignes)</span>
+        </button>
+
+        <button id="btnExamSubmit" class="btn-action px-4 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-black shadow-lg shadow-emerald-600/30 flex items-center gap-1.5 border border-emerald-400/50">
+          <i class="fa-solid fa-circle-check text-emerald-200"></i>
+          <span>تسليم الامتحان (Soumettre)</span>
+        </button>
+
+        <button id="btnExamCancel" class="btn-action px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-rose-950/70 text-slate-300 hover:text-rose-300 text-xs font-bold border border-slate-700 flex items-center gap-1.5">
+          <i class="fa-solid fa-xmark"></i>
+          <span>إلغاء الامتحان</span>
+        </button>
+      </div>
     </div>
   </div>
 
@@ -561,7 +615,288 @@
     </div>
   </div>
 
-  <!-- TOAST NOTIFICATION CONTAINER -->
+  
+  <!-- ==========================================
+       EXAM MODE MODALS
+       ========================================== -->
+
+  <!-- MODAL: EXAM SELECTION (TYPE A / TYPE B) -->
+  <div id="examSelectionModal" class="fixed inset-0 bg-black/85 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-4xl w-full p-6 shadow-2xl flex flex-col gap-5 relative max-h-[90vh]">
+      
+      <!-- Modal Header -->
+      <div class="flex items-center justify-between border-b border-slate-800 pb-4">
+        <div class="flex items-center gap-3">
+          <div class="w-11 h-11 rounded-xl bg-gradient-to-tr from-amber-500 via-rose-500 to-red-600 flex items-center justify-center shadow-lg text-white text-xl">
+            <i class="fa-solid fa-graduation-cap"></i>
+          </div>
+          <div>
+            <h3 class="text-base font-black text-white flex items-center gap-2">
+              <span>نظام الامتحانات المهنية والتقييم النهائي</span>
+              <span class="text-xs px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-300 border border-rose-500/40 font-tech">NFC 15-100 Exam</span>
+            </h3>
+            <p class="text-xs text-slate-400 font-tech">
+              Évaluation formative et sommative des compétences en électricité de bâtiment
+            </p>
+          </div>
+        </div>
+        <button id="btnCloseExamSelectionModal" class="text-slate-400 hover:text-white text-lg p-1">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <!-- Type Switcher Tabs (Type A vs Type B) -->
+      <div class="flex items-center gap-2 bg-slate-950 p-1.5 rounded-xl border border-slate-800">
+        <button id="tabExamTypeA" class="flex-1 py-2.5 px-4 rounded-lg text-xs font-bold transition flex items-center justify-center gap-2 bg-blue-600 text-white shadow-md">
+          <i class="fa-solid fa-wrench"></i>
+          <span>النوع الأول: تركيب الدارة من الصفر (Montage à Blanc)</span>
+        </button>
+        <button id="tabExamTypeB" class="flex-1 py-2.5 px-4 rounded-lg text-xs font-bold transition flex items-center justify-center gap-2 bg-slate-900 text-slate-400 hover:text-white">
+          <i class="fa-solid fa-stethoscope"></i>
+          <span>النوع الثاني: تشخيص وإصلاح الأعطال (Dépannage & Diagnostic)</span>
+        </button>
+      </div>
+
+      <!-- Exercises List Container (Scrollable) -->
+      <div id="examExercisesContainer" class="overflow-y-auto max-h-[55vh] flex flex-col gap-3 pr-1 exam-modal-scroll">
+        <!-- Injected dynamically by JS -->
+      </div>
+
+      <!-- Footer Actions -->
+      <div class="border-t border-slate-800 pt-3 flex items-center justify-between text-xs text-slate-400">
+        <div class="flex items-center gap-2">
+          <i class="fa-solid fa-shield-halved text-emerald-400"></i>
+          <span>التقييم صارم ومستقل (70 نقطة للتوصيل، 15 للعلاقات، 10 للألوان، 5 للإتقان). العلامة بعد التسليم.</span>
+        </div>
+        <button onclick="document.getElementById('examSelectionModal').classList.add('hidden')" class="px-4 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold border border-slate-700">
+          إغلاق النافذة
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- MODAL: EXAM TASKS & INSTRUCTIONS PREVIEW -->
+  <div id="examTasksModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-lg w-full p-5 shadow-2xl flex flex-col gap-4 relative">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+        <h3 class="text-sm font-bold text-white flex items-center gap-2">
+          <i class="fa-solid fa-list-check text-sky-400"></i>
+          <span id="examTasksModalTitle">تعليمات مهمة الامتحان</span>
+        </h3>
+        <button onclick="document.getElementById('examTasksModal').classList.add('hidden')" class="text-slate-400 hover:text-white text-base">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div class="flex flex-col gap-3 text-xs">
+        <div id="examTasksDescription" class="p-3 rounded-xl bg-slate-950 border border-slate-800 text-slate-300 leading-relaxed font-semibold">
+          وصف المهمة
+        </div>
+        <div>
+          <h4 class="text-xs font-bold text-amber-400 mb-2">الخطوات والمعايير المطلوبة:</h4>
+          <ul id="examTasksList" class="flex flex-col gap-2">
+            <!-- Injected dynamically -->
+          </ul>
+        </div>
+      </div>
+
+      <div class="border-t border-slate-800 pt-3 flex justify-end">
+        <button onclick="document.getElementById('examTasksModal').classList.add('hidden')" class="px-4 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold shadow">
+          فهمت المطلوب، متابعة الامتحان
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: CONFIRM SUBMISSION -->
+  <div id="examConfirmSubmitModal" class="fixed inset-0 bg-black/85 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-5 shadow-2xl flex flex-col gap-4 relative text-center">
+      <div class="w-12 h-12 rounded-full bg-amber-500/20 text-amber-400 flex items-center justify-center mx-auto text-2xl border border-amber-500/30">
+        <i class="fa-solid fa-triangle-exclamation"></i>
+      </div>
+
+      <div>
+        <h3 class="text-base font-black text-white mb-1">تأكيد تسليم الامتحان النهائي</h3>
+        <p class="text-xs text-slate-300 leading-relaxed">
+          هل أنت متأكد من تسليم ورقة الامتحان؟ لن تتمكن من تعديل التوصيلات أو الأسلاك بعد التسليم، وسيتم احتساب الدرجة النهائية وعرض تقرير التقييم.
+        </p>
+      </div>
+
+      <div class="p-3 rounded-xl bg-slate-950 border border-slate-800 text-xs flex items-center justify-center gap-2 text-slate-400">
+        <span>الوقت المتبقي:</span>
+        <span id="examConfirmRemainingTime" class="font-mono-tech text-white font-bold text-sm">--:--</span>
+      </div>
+
+      <div class="flex items-center justify-center gap-2 pt-2">
+        <button id="btnCancelSubmitExam" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold border border-slate-700">
+          الرجوع للمتابعة
+        </button>
+        <button id="btnExecuteSubmitExam" class="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-black shadow-lg shadow-emerald-600/30 flex items-center gap-1.5">
+          <i class="fa-solid fa-check-double"></i>
+          <span>نعم، سلّم الامتحان الآن</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: EXAM RESULTS & DETAILED GRADING REPORT -->
+  <div id="examResultsModal" class="fixed inset-0 bg-black/90 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-3xl w-full p-6 shadow-2xl flex flex-col gap-4 relative max-h-[92vh]">
+      
+      <!-- Results Header -->
+      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+        <div class="flex items-center gap-3">
+          <div id="examResultHeaderIcon" class="w-11 h-11 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-2xl border border-emerald-500/30">
+            <i class="fa-solid fa-award"></i>
+          </div>
+          <div>
+            <h3 id="examResultTitle" class="text-base font-black text-white">تقرير التقييم النهائي للامتحان</h3>
+            <p id="examResultSubtitle" class="text-xs text-slate-400 font-tech">Rapport d'évaluation professionnelle NFC 15-100</p>
+          </div>
+        </div>
+        <button id="btnCloseResultsModal" class="text-slate-400 hover:text-white text-lg p-1">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <!-- Scrollable Result Body -->
+      <div class="overflow-y-auto max-h-[68vh] flex flex-col gap-4 pr-1 exam-modal-scroll">
+        
+        <!-- Total Score & Status Banner -->
+        <div id="examResultBanner" class="p-4 rounded-2xl bg-gradient-to-r from-emerald-950/60 to-slate-900 border border-emerald-500/40 flex items-center justify-between gap-4 flex-wrap">
+          <div class="flex items-center gap-4">
+            <div class="text-center bg-slate-950/80 px-4 py-2.5 rounded-xl border border-slate-800">
+              <div class="text-[11px] text-slate-400 font-bold">الدرجة الإجمالية</div>
+              <div id="examResultScoreDisplay" class="text-3xl font-black text-emerald-400 font-mono-tech">85<span class="text-sm text-slate-400 font-normal">/100</span></div>
+            </div>
+            <div>
+              <div id="examResultStatusBadge" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 mb-1">
+                ● ناجح (Admis)
+              </div>
+              <div id="examResultExerciseName" class="text-xs font-bold text-white">اسم التمرين</div>
+              <div id="examResultTimeTaken" class="text-[11px] text-slate-400 mt-0.5">الوقت المستغرق: -- دقيقة</div>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center text-xs">
+            <div class="p-2 rounded-lg bg-slate-950/70 border border-slate-800">
+              <div class="text-[10px] text-slate-400">التوصيل الكهربائي</div>
+              <div id="scoreConnVal" class="font-black text-sky-400">--/70</div>
+            </div>
+            <div class="p-2 rounded-lg bg-slate-950/70 border border-slate-800">
+              <div class="text-[10px] text-slate-400">سلامة العلاقات</div>
+              <div id="scoreRelVal" class="font-black text-indigo-400">--/15</div>
+            </div>
+            <div class="p-2 rounded-lg bg-slate-950/70 border border-slate-800">
+              <div class="text-[10px] text-slate-400">ألوان الأسلاك</div>
+              <div id="scoreColorVal" class="font-black text-amber-400">--/10</div>
+            </div>
+            <div class="p-2 rounded-lg bg-slate-950/70 border border-slate-800">
+              <div class="text-[10px] text-slate-400">إتقان المهمة</div>
+              <div id="scoreHygVal" class="font-black text-emerald-400">--/5</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- General Feedback Note -->
+        <div id="examResultFeedbackBox" class="p-3 rounded-xl bg-slate-950 border border-slate-800 text-xs text-slate-300 leading-relaxed font-semibold">
+          ملاحظات التقييم العامة
+        </div>
+
+        <!-- Faults Diagnosis Status (Type B only) -->
+        <div id="examFaultsContainer" class="hidden flex flex-col gap-2">
+          <h4 class="text-xs font-bold text-amber-400 flex items-center gap-1.5">
+            <i class="fa-solid fa-stethoscope"></i>
+            <span>نتائج تشخيص وإصلاح الأعطال المحددة:</span>
+          </h4>
+          <div id="examFaultsList" class="flex flex-col gap-1.5 text-xs">
+            <!-- Injected dynamically -->
+          </div>
+        </div>
+
+        <!-- Detailed Connections Checklist -->
+        <div class="flex flex-col gap-2">
+          <h4 class="text-xs font-bold text-sky-400 flex items-center gap-1.5">
+            <i class="fa-solid fa-clipboard-check"></i>
+            <span>تدقيق التوصيلات الكهربائية المطلوبة بالتفصيل:</span>
+          </h4>
+          <div id="examResultDetailsList" class="flex flex-col gap-1.5 text-xs">
+            <!-- Injected dynamically -->
+          </div>
+        </div>
+
+        <!-- Color Compliance Warnings -->
+        <div id="examColorIssuesContainer" class="hidden flex flex-col gap-2">
+          <h4 class="text-xs font-bold text-rose-400 flex items-center gap-1.5">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+            <span>ملاحظات عدم مطابقة ألوان الأسلاك (NFC 15-100):</span>
+          </h4>
+          <div id="examColorIssuesList" class="flex flex-col gap-1.5 text-xs">
+            <!-- Injected dynamically -->
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Results Footer Buttons -->
+      <div class="border-t border-slate-800 pt-3 flex items-center justify-between gap-2 flex-wrap">
+        <button id="btnInspectFrozenCanvas" class="btn-action px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold border border-slate-700 flex items-center gap-1.5">
+          <i class="fa-solid fa-eye text-sky-400"></i>
+          <span>معاينة التوصيل على اللوحة</span>
+        </button>
+
+        <div class="flex items-center gap-2">
+          <button id="btnFinishAndRestore" class="btn-action px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-black shadow-lg shadow-blue-600/30 flex items-center gap-1.5">
+            <i class="fa-solid fa-arrow-right-from-bracket"></i>
+            <span>إنهاء المراجعة والعودة إلى نمط التدريب</span>
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- MODAL: EXAM HISTORY -->
+  <div id="examHistoryModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-2xl w-full p-5 shadow-2xl flex flex-col gap-4 relative">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+        <div class="flex items-center gap-2.5">
+          <div class="w-9 h-9 rounded-lg bg-amber-500/20 text-amber-400 flex items-center justify-center text-base border border-amber-500/30">
+            <i class="fa-solid fa-award"></i>
+          </div>
+          <div>
+            <h3 class="text-sm font-bold text-white">سجل نتائج الامتحانات السابقة</h3>
+            <p class="text-[11px] text-slate-400 font-tech">Historique des résultats d'épreuves</p>
+          </div>
+        </div>
+        <button onclick="document.getElementById('examHistoryModal').classList.add('hidden')" class="text-slate-400 hover:text-white text-base">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div id="examHistoryList" class="overflow-y-auto max-h-[50vh] flex flex-col gap-2 text-xs exam-modal-scroll">
+        <!-- Injected dynamically -->
+      </div>
+
+      <div id="examHistoryEmpty" class="text-center py-8 text-slate-400 text-xs hidden flex-col items-center gap-2">
+        <i class="fa-regular fa-folder-open text-3xl text-slate-600"></i>
+        <span>لا توجد نتائج امتحانات مسجلة حتى الآن.</span>
+      </div>
+
+      <div class="border-t border-slate-800 pt-3 flex items-center justify-between">
+        <button id="btnClearExamHistory" class="btn-action px-3 py-1.5 rounded-lg bg-rose-950/40 hover:bg-rose-900/60 text-rose-300 text-xs font-bold border border-rose-800/40">
+          <i class="fa-solid fa-trash-can ml-1"></i>
+          <span>مسح السجل بالكامل</span>
+        </button>
+
+        <button onclick="document.getElementById('examHistoryModal').classList.add('hidden')" class="px-4 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold border border-slate-700">
+          إغلاق
+        </button>
+      </div>
+    </div>
+  </div>
+<!-- TOAST NOTIFICATION CONTAINER -->
   <div id="toastContainer" class="fixed bottom-4 left-4 z-50 flex flex-col gap-2 pointer-events-none"></div>
 
   <!-- APPLICATION SCRIPTS -->
@@ -569,6 +904,7 @@
   <script src="js/components.js"></script>
   <script src="js/wire-router.js"></script>
   <script src="js/engine.js"></script>
+  <script src="js/exam-engine.js"></script>
   <script src="js/backup.js"></script>
   <script src="js/app.js"></script>
 </body>

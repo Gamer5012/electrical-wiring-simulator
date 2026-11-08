@@ -64,6 +64,11 @@
     </div>
 
     <div class="flex items-center gap-1.5">
+      <button id="btnMobileOpenExam" class="px-2.5 py-1.5 rounded-lg bg-gradient-to-r from-amber-500 to-rose-600 text-white text-[11px] font-black shadow flex items-center gap-1 border border-rose-400/40" title="الامتحانات المهنية">
+        <i class="fa-solid fa-graduation-cap text-yellow-200"></i>
+        <span>امتحان</span>
+      </button>
+
       <a href="index.html" class="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-sky-300 text-[11px] font-bold border border-slate-700 flex items-center gap-1 shadow" title="التبديل إلى نسخة شاشة الحاسوب">
         <i class="fa-solid fa-desktop text-sky-400"></i>
         <span>الحاسوب</span>
@@ -136,6 +141,36 @@
   </div>
 
   <!-- MAIN SCROLLABLE WORKBENCH CANVAS AREA -->
+  <!-- MOBILE ACTIVE EXAM STICKY BAR -->
+  <div id="mobileExamActiveBar" class="hidden bg-gradient-to-r from-slate-950 via-rose-950 to-slate-950 border-b border-rose-500/60 px-3 py-1.5 shrink-0 z-20 flex items-center justify-between gap-2 shadow-md">
+    <div class="flex items-center gap-2 overflow-hidden">
+      <span class="px-2 py-0.5 rounded text-[10px] font-black bg-rose-500/30 text-rose-300 border border-rose-500/40 shrink-0">
+        🎯 امتحان
+      </span>
+      <span id="mobileExamActiveTitle" class="text-xs font-bold text-white truncate">اسم التمرين</span>
+    </div>
+
+    <div class="flex items-center gap-1.5 shrink-0">
+      <!-- Timer Display -->
+      <div id="mobileExamTimerBadge" class="px-2 py-0.5 rounded-lg bg-slate-900 border border-amber-500/40 font-mono-tech text-xs font-black text-amber-300">
+        10:00
+      </div>
+
+      <button id="btnMobileExamTasks" class="p-1.5 rounded-lg bg-slate-800 text-sky-300 text-xs border border-slate-700" title="تعليمات المهمة">
+        <i class="fa-solid fa-list-check"></i>
+      </button>
+
+      <button id="btnMobileExamSubmit" class="px-2.5 py-1 rounded-lg bg-emerald-600 text-white text-xs font-black shadow flex items-center gap-1">
+        <i class="fa-solid fa-circle-check"></i>
+        <span>تسليم</span>
+      </button>
+
+      <button id="btnMobileExamCancel" class="p-1.5 rounded-lg bg-slate-800 text-rose-300 text-xs border border-slate-700" title="إلغاء الامتحان">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+  </div>
+
   <main id="mobileMain" class="relative flex-1 w-full bg-slate-950 overflow-y-auto overflow-x-hidden touch-pan-y overscroll-contain">
     
     <div id="mobileCanvasWrapper" class="w-full relative flex flex-col items-center pb-36">
@@ -262,7 +297,230 @@
     </button>
   </div>
 
-  <!-- TOAST NOTIFICATION FOR MOBILE -->
+  
+  <!-- ==========================================
+       MOBILE EXAM MODE MODALS & SHEETS
+       ========================================== -->
+
+  <!-- MOBILE SHEET: EXAM SELECTION -->
+  <div id="mobileExamSelectionSheet" class="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex flex-col justify-end hidden">
+    <div class="bg-slate-900 border-t border-slate-800 rounded-t-3xl p-4 max-h-[85vh] flex flex-col gap-3 shadow-2xl">
+      <div class="w-12 h-1.5 rounded-full bg-slate-700 mx-auto -mt-1" onclick="document.getElementById('mobileExamSelectionSheet').classList.add('hidden')"></div>
+
+      <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+        <div class="flex items-center gap-2">
+          <i class="fa-solid fa-graduation-cap text-amber-400 text-base"></i>
+          <div>
+            <h3 class="text-sm font-black text-white">الامتحانات المهنية (NFC 15-100)</h3>
+            <p class="text-[10px] text-slate-400 font-tech">Examens Pratiques de Câblage</p>
+          </div>
+        </div>
+        <button onclick="document.getElementById('mobileExamSelectionSheet').classList.add('hidden')" class="text-slate-400 hover:text-white p-1 text-base">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <!-- Type Switcher Tabs -->
+      <div class="flex items-center gap-1.5 bg-slate-950 p-1 rounded-xl border border-slate-800 shrink-0">
+        <button id="tabMobileExamTypeA" class="flex-1 py-1.5 rounded-lg text-xs font-bold bg-blue-600 text-white shadow">
+          تركيب من الصفر (Type A)
+        </button>
+        <button id="tabMobileExamTypeB" class="flex-1 py-1.5 rounded-lg text-xs font-bold bg-slate-900 text-slate-400">
+          تشخيص الأعطال (Type B)
+        </button>
+      </div>
+
+      <!-- Exercises List Container -->
+      <div id="mobileExamExercisesContainer" class="overflow-y-auto max-h-[55vh] flex flex-col gap-2.5 pr-0.5">
+        <!-- Injected dynamically -->
+      </div>
+
+      <div class="border-t border-slate-800 pt-2 flex items-center justify-between">
+        <button id="btnMobileOpenHistory" class="text-xs text-amber-400 font-bold flex items-center gap-1">
+          <i class="fa-solid fa-award"></i>
+          <span>سجل النتائج السابقة</span>
+        </button>
+        <button onclick="document.getElementById('mobileExamSelectionSheet').classList.add('hidden')" class="px-3 py-1.5 rounded-lg bg-slate-800 text-slate-200 text-xs font-bold border border-slate-700">
+          إلغاء
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MOBILE SHEET: TASK INSTRUCTIONS -->
+  <div id="mobileExamTasksSheet" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex flex-col justify-end hidden">
+    <div class="bg-slate-900 border-t border-slate-800 rounded-t-3xl p-4 max-h-[75vh] flex flex-col gap-3 shadow-2xl">
+      <div class="w-12 h-1.5 rounded-full bg-slate-700 mx-auto -mt-1" onclick="document.getElementById('mobileExamTasksSheet').classList.add('hidden')"></div>
+
+      <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+        <h3 class="text-xs font-bold text-white flex items-center gap-1.5">
+          <i class="fa-solid fa-list-check text-sky-400"></i>
+          <span id="mobileExamTasksTitle">تعليمات المهمة</span>
+        </h3>
+        <button onclick="document.getElementById('mobileExamTasksSheet').classList.add('hidden')" class="text-slate-400 hover:text-white p-1 text-base">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div class="overflow-y-auto max-h-[50vh] flex flex-col gap-2.5 text-xs">
+        <div id="mobileExamTasksDesc" class="p-2.5 rounded-xl bg-slate-950 border border-slate-800 text-slate-300 leading-relaxed font-semibold">
+          وصف المهمة
+        </div>
+        <div>
+          <h4 class="text-[11px] font-bold text-amber-400 mb-1.5">المعايير والخطوات المطلوبة:</h4>
+          <ul id="mobileExamTasksList" class="flex flex-col gap-1.5">
+            <!-- Injected dynamically -->
+          </ul>
+        </div>
+      </div>
+
+      <button onclick="document.getElementById('mobileExamTasksSheet').classList.add('hidden')" class="w-full py-2 rounded-xl bg-blue-600 text-white text-xs font-bold shadow">
+        متابعة العمل على اللوحة
+      </button>
+    </div>
+  </div>
+
+  <!-- MOBILE DIALOG: CONFIRM SUBMISSION -->
+  <div id="mobileExamConfirmModal" class="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 max-w-xs w-full text-center flex flex-col gap-3 shadow-2xl">
+      <div class="w-10 h-10 rounded-full bg-amber-500/20 text-amber-400 flex items-center justify-center mx-auto text-xl border border-amber-500/30">
+        <i class="fa-solid fa-triangle-exclamation"></i>
+      </div>
+      <div>
+        <h3 class="text-sm font-black text-white">تسليم الامتحان النهائي</h3>
+        <p class="text-xs text-slate-300 mt-1 leading-relaxed">
+          هل أنت متأكد من تسليم ورقة الامتحان؟ لن تتمكن من تعديل التوصيلات بعد التسليم.
+        </p>
+      </div>
+      <div class="p-2 rounded-lg bg-slate-950 text-xs text-slate-400 font-mono-tech">
+        الوقت المتبقي: <span id="mobileExamConfirmTimer" class="text-amber-300 font-bold">--:--</span>
+      </div>
+      <div class="flex items-center gap-2 pt-1">
+        <button id="btnMobileCancelSubmit" class="flex-1 py-2 rounded-xl bg-slate-800 text-slate-300 text-xs font-bold border border-slate-700">
+          تراجع
+        </button>
+        <button id="btnMobileExecuteSubmit" class="flex-1 py-2 rounded-xl bg-emerald-600 text-white text-xs font-black shadow flex items-center justify-center gap-1">
+          <i class="fa-solid fa-check"></i>
+          <span>تأكيد التسليم</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MOBILE SHEET: RESULTS & DETAILED GRADING -->
+  <div id="mobileExamResultsSheet" class="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex flex-col justify-end hidden">
+    <div class="bg-slate-900 border-t border-slate-800 rounded-t-3xl p-4 max-h-[90vh] flex flex-col gap-3 shadow-2xl">
+      <div class="w-12 h-1.5 rounded-full bg-slate-700 mx-auto -mt-1" onclick="document.getElementById('mobileExamResultsSheet').classList.add('hidden')"></div>
+
+      <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+        <div class="flex items-center gap-2">
+          <i class="fa-solid fa-award text-amber-400 text-base"></i>
+          <h3 class="text-sm font-black text-white">النتيجة والتقييم النهائي</h3>
+        </div>
+        <button id="btnCloseMobileResults" class="text-slate-400 hover:text-white p-1 text-base">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div class="overflow-y-auto max-h-[70vh] flex flex-col gap-3 pr-0.5 text-xs">
+        <!-- Score Card -->
+        <div class="p-3 rounded-2xl bg-gradient-to-r from-emerald-950/70 to-slate-900 border border-emerald-500/40 flex items-center justify-between gap-3">
+          <div>
+            <div class="text-[10px] text-slate-400 font-bold">الدرجة النهائية</div>
+            <div id="mobileResultScore" class="text-2xl font-black text-emerald-400 font-mono-tech">85/100</div>
+            <div id="mobileResultStatus" class="inline-block mt-1 px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+              ● ناجح
+            </div>
+          </div>
+          <div class="grid grid-cols-2 gap-1.5 text-center text-[10px]">
+            <div class="p-1.5 rounded bg-slate-950/80 border border-slate-800">
+              <div class="text-slate-400">توصيل</div>
+              <div id="mobileScoreConn" class="font-bold text-sky-400">--/70</div>
+            </div>
+            <div class="p-1.5 rounded bg-slate-950/80 border border-slate-800">
+              <div class="text-slate-400">علاقات</div>
+              <div id="mobileScoreRel" class="font-bold text-indigo-400">--/15</div>
+            </div>
+            <div class="p-1.5 rounded bg-slate-950/80 border border-slate-800">
+              <div class="text-slate-400">ألوان</div>
+              <div id="mobileScoreColors" class="font-bold text-amber-400">--/10</div>
+            </div>
+            <div class="p-1.5 rounded bg-slate-950/80 border border-slate-800">
+              <div class="text-slate-400">إتقان</div>
+              <div id="mobileScoreHyg" class="font-bold text-emerald-400">--/5</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- General Feedback -->
+        <div id="mobileResultFeedback" class="p-2.5 rounded-xl bg-slate-950 border border-slate-800 text-[11px] text-slate-300 leading-relaxed font-semibold">
+          ملاحظات التقييم
+        </div>
+
+        <!-- Faults Diagnosis List -->
+        <div id="mobileFaultsBox" class="hidden flex flex-col gap-1.5">
+          <h4 class="text-[11px] font-bold text-amber-400">تشخيص وإصلاح الأعطال:</h4>
+          <div id="mobileFaultsList" class="flex flex-col gap-1"></div>
+        </div>
+
+        <!-- Details Checklist -->
+        <div class="flex flex-col gap-1.5">
+          <h4 class="text-[11px] font-bold text-sky-400">تدقيق التوصيلات الكهربائية:</h4>
+          <div id="mobileResultDetailsList" class="flex flex-col gap-1"></div>
+        </div>
+
+        <!-- Color Warnings -->
+        <div id="mobileColorIssuesBox" class="hidden flex flex-col gap-1.5">
+          <h4 class="text-[11px] font-bold text-rose-400">مخالفات ألوان الأسلاك:</h4>
+          <div id="mobileColorIssuesList" class="flex flex-col gap-1"></div>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2 pt-1 border-t border-slate-800">
+        <button id="btnMobileInspectCanvas" class="flex-1 py-2 rounded-xl bg-slate-800 text-slate-200 text-xs font-bold border border-slate-700">
+          معاينة اللوحة
+        </button>
+        <button id="btnMobileFinishRestore" class="flex-1 py-2 rounded-xl bg-blue-600 text-white text-xs font-black shadow">
+          إنهاء والعودة للتدريب
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MOBILE SHEET: EXAM HISTORY -->
+  <div id="mobileExamHistorySheet" class="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex flex-col justify-end hidden">
+    <div class="bg-slate-900 border-t border-slate-800 rounded-t-3xl p-4 max-h-[80vh] flex flex-col gap-3 shadow-2xl">
+      <div class="w-12 h-1.5 rounded-full bg-slate-700 mx-auto -mt-1" onclick="document.getElementById('mobileExamHistorySheet').classList.add('hidden')"></div>
+
+      <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+        <h3 class="text-xs font-bold text-white flex items-center gap-1.5">
+          <i class="fa-solid fa-award text-amber-400"></i>
+          <span>سجل نتائج الامتحانات السابقة</span>
+        </h3>
+        <button onclick="document.getElementById('mobileExamHistorySheet').classList.add('hidden')" class="text-slate-400 hover:text-white p-1 text-base">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div id="mobileExamHistoryList" class="overflow-y-auto max-h-[50vh] flex flex-col gap-2 text-xs">
+        <!-- Injected dynamically -->
+      </div>
+
+      <div id="mobileExamHistoryEmpty" class="text-center py-6 text-slate-400 text-xs hidden">
+        لا توجد نتائج مسجلة حتى الآن.
+      </div>
+
+      <div class="flex items-center justify-between pt-1 border-t border-slate-800">
+        <button id="btnMobileClearHistory" class="text-rose-400 text-xs font-bold">
+          مسح السجل بالكامل
+        </button>
+        <button onclick="document.getElementById('mobileExamHistorySheet').classList.add('hidden')" class="px-3 py-1.5 rounded-lg bg-slate-800 text-slate-300 text-xs">
+          إغلاق
+        </button>
+      </div>
+    </div>
+  </div>
+<!-- TOAST NOTIFICATION FOR MOBILE -->
   <div id="mobileToast" class="fixed top-16 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-full text-xs font-bold shadow-2xl transition-all duration-300 opacity-0 pointer-events-none bg-slate-800 text-white border border-slate-700"></div>
 
   <!-- APPLICATION SCRIPTS -->
@@ -271,6 +529,7 @@
   <script src="js/mobile-components.js"></script>
   <script src="js/wire-router.js"></script>
   <script src="js/engine.js"></script>
+  <script src="js/exam-engine.js"></script>
   <script src="js/backup.js"></script>
   <script src="js/mobile-app.js"></script>
 </body>

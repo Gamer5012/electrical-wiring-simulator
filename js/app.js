@@ -37,6 +37,10 @@ class SimulatorApp {
     this.animationId = null;
     this.currentMode = 'DA';
     this.vvVariant = 'FR';
+
+    // Exam Mode Manager
+    this.examManager = null;
+    this.activeExamTypeTab = 'build'; // 'build' or 'fault'
   }
 
   init() {
@@ -55,6 +59,12 @@ class SimulatorApp {
     if (window.BackupManager) {
       this.backupManager = new window.BackupManager(this);
       this.backupManager.init();
+    }
+
+    // Initialize Exam Session Manager
+    if (window.ExamSessionManager) {
+      this.examManager = new window.ExamSessionManager(this);
+      this.initExamMode();
     }
 
     this.setCircuitMode('DA');
@@ -473,6 +483,11 @@ class SimulatorApp {
   }
 
   onPointerDown(e) {
+    // If exam has been submitted, workspace is frozen for review
+    if (this.examManager && this.examManager.isExamSubmitted) {
+      return;
+    }
+
     const coords = this.getCanvasCoords(e);
     this.pointerDownPos = coords;
 
@@ -733,6 +748,10 @@ class SimulatorApp {
   }
 
   setCircuitMode(mode) {
+    if (this.examManager && this.examManager.isExamActive && !this.examManager.isExamSubmitted) {
+      this.showToast('لا يمكن تغيير نوع الدارة أثناء الامتحان النشط. سلّم أو ألغِ الامتحان أولاً.', 'error');
+      return;
+    }
     this.currentMode = mode;
     this.cm.setMode(mode, this.vvVariant);
     this.wr.clear();
@@ -840,6 +859,16 @@ class SimulatorApp {
   }
 
   runFullAudit() {
+    if (this.examManager && this.examManager.isExamActive && !this.examManager.isExamSubmitted) {
+      this.updateDiagnosticsUI({
+        status: 'exam',
+        generalMessageAr: '🎯 وضع الامتحان نشط: التقييم التلقائي معطّل لضمان سرية الامتحان. يمكنك فحص إضاءة المصابيح يدوياً عبر المفاتيح والقواطع. التقييم النهائي سيظهر كاملاً فور تسليم الامتحان.',
+        generalMessageFr: 'Mode Examen actif : Évaluation différée jusqu\'à la soumission finale.',
+        checks: [],
+        colorWarnings: []
+      });
+      return;
+    }
     const report = this.engine.evaluateAudit();
     this.updateDiagnosticsUI(report);
   }
@@ -1000,6 +1029,555 @@ class SimulatorApp {
       toast.classList.add('opacity-0', 'translate-y-2');
       setTimeout(() => toast.remove(), 300);
     }, 3200);
+  }
+
+  // ==========================================
+  // PROFESSIONAL EXAM MODE METHODS
+  // ==========================================
+
+  initExamMode() {
+    if (!this.examManager) return;
+
+    // Timer Tick callback
+    this.examManager.onTimerTick = (remaining, total) => {
+      this.updateExamTimerUI(remaining, total);
+    };
+
+    // Timer Expiry callback
+    this.examManager.onTimerExpired = () => {
+      this.autoSubmitExam();
+    };
+
+    // Header Button: Open Exam Modal
+    const btnOpenExam = document.getElementById('btnOpenExamModal');
+    if (btnOpenExam) {
+      btnOpenExam.addEventListener('click', () => {
+        this.openExamSelectionModal();
+      });
+    }
+
+    // Header Button: Open Exam History
+    const btnOpenHistory = document.getElementById('btnOpenExamHistory');
+    if (btnOpenHistory) {
+      btnOpenHistory.addEventListener('click', () => {
+        this.openExamHistoryModal();
+      });
+    }
+
+    // Modal Close Button
+    const btnCloseModal = document.getElementById('btnCloseExamSelectionModal');
+    if (btnCloseModal) {
+      btnCloseModal.addEventListener('click', () => {
+        const modal = document.getElementById('examSelectionModal');
+        if (modal) modal.classList.add('hidden');
+      });
+    }
+
+    // Tab Type A: Build From Scratch
+    const tabA = document.getElementById('tabExamTypeA');
+    const tabB = document.getElementById('tabExamTypeB');
+    if (tabA && tabB) {
+      tabA.addEventListener('click', () => {
+        this.activeExamTypeTab = 'build';
+        tabA.className = 'flex-1 py-2.5 px-4 rounded-lg text-xs font-bold transition flex items-center justify-center gap-2 bg-blue-600 text-white shadow-md';
+        tabB.className = 'flex-1 py-2.5 px-4 rounded-lg text-xs font-bold transition flex items-center justify-center gap-2 bg-slate-900 text-slate-400 hover:text-white';
+        this.renderExamExercisesList('build');
+      });
+
+      tabB.addEventListener('click', () => {
+        this.activeExamTypeTab = 'fault';
+        tabB.className = 'flex-1 py-2.5 px-4 rounded-lg text-xs font-bold transition flex items-center justify-center gap-2 bg-amber-600 text-white shadow-md';
+        tabA.className = 'flex-1 py-2.5 px-4 rounded-lg text-xs font-bold transition flex items-center justify-center gap-2 bg-slate-900 text-slate-400 hover:text-white';
+        this.renderExamExercisesList('fault');
+      });
+    }
+
+    // Active Bar: View Tasks Button
+    const btnViewTasks = document.getElementById('btnExamViewTasks');
+    if (btnViewTasks) {
+      btnViewTasks.addEventListener('click', () => {
+        this.openTasksModal();
+      });
+    }
+
+    // Active Bar: Submit Exam Button -> Opens Confirmation Modal
+    const btnSubmit = document.getElementById('btnExamSubmit');
+    if (btnSubmit) {
+      btnSubmit.addEventListener('click', () => {
+        const modal = document.getElementById('examConfirmSubmitModal');
+        const timerDisp = document.getElementById('examConfirmRemainingTime');
+        const currTimer = document.getElementById('examTimerDisplay');
+        if (timerDisp && currTimer) timerDisp.textContent = currTimer.textContent;
+        if (modal) modal.classList.remove('hidden');
+      });
+    }
+
+    // Confirm Modal: Execute Submission
+    const btnExecSubmit = document.getElementById('btnExecuteSubmitExam');
+    if (btnExecSubmit) {
+      btnExecSubmit.addEventListener('click', () => {
+        const modal = document.getElementById('examConfirmSubmitModal');
+        if (modal) modal.classList.add('hidden');
+        this.submitExam();
+      });
+    }
+
+    // Confirm Modal: Cancel Submit
+    const btnCancelSub = document.getElementById('btnCancelSubmitExam');
+    if (btnCancelSub) {
+      btnCancelSub.addEventListener('click', () => {
+        const modal = document.getElementById('examConfirmSubmitModal');
+        if (modal) modal.classList.add('hidden');
+      });
+    }
+
+    // Active Bar: Cancel Exam Button
+    const btnCancelExam = document.getElementById('btnExamCancel');
+    if (btnCancelExam) {
+      btnCancelExam.addEventListener('click', () => {
+        if (confirm('هل أنت متأكد من إلغاء الامتحان؟ سيتم التراجع عن الامتحان واستعادة لوحة العمل السابقة دون حفظ علامة.')) {
+          this.cancelExam();
+        }
+      });
+    }
+
+    // Results Modal: Close Button
+    const btnCloseResults = document.getElementById('btnCloseResultsModal');
+    if (btnCloseResults) {
+      btnCloseResults.addEventListener('click', () => {
+        const modal = document.getElementById('examResultsModal');
+        if (modal) modal.classList.add('hidden');
+      });
+    }
+
+    // Results Modal: Inspect Frozen Canvas
+    const btnInspect = document.getElementById('btnInspectFrozenCanvas');
+    if (btnInspect) {
+      btnInspect.addEventListener('click', () => {
+        const modal = document.getElementById('examResultsModal');
+        if (modal) modal.classList.add('hidden');
+        this.showToast('يمكنك الآن معاينة اللوحة بحرية (اللوحة مجمدة). اضغط على "إنهاء المراجعة" عند الانتهاء.', 'info');
+      });
+    }
+
+    // Results Modal: Finish & Restore
+    const btnFinish = document.getElementById('btnFinishAndRestore');
+    if (btnFinish) {
+      btnFinish.addEventListener('click', () => {
+        this.exitExam();
+      });
+    }
+
+    // Clear History Button
+    const btnClearHistory = document.getElementById('btnClearExamHistory');
+    if (btnClearHistory) {
+      btnClearHistory.addEventListener('click', () => {
+        if (confirm('هل أنت متأكد من مسح جميع نتائج الامتحانات السابقة نهائياً؟')) {
+          this.examManager.clearExamHistory();
+          this.renderExamHistoryUI();
+          this.showToast('تم مسح سجل نتائج الامتحانات بنجاح', 'info');
+        }
+      });
+    }
+  }
+
+  openExamSelectionModal() {
+    if (this.examManager && this.examManager.isExamActive && !this.examManager.isExamSubmitted) {
+      this.showToast('هناك امتحان قيد التنفيذ بالفعل! يرجى تسليمه أو إلغاؤه.', 'error');
+      return;
+    }
+    const modal = document.getElementById('examSelectionModal');
+    if (modal) modal.classList.remove('hidden');
+    this.renderExamExercisesList(this.activeExamTypeTab);
+  }
+
+  renderExamExercisesList(type) {
+    const container = document.getElementById('examExercisesContainer');
+    if (!container || !this.examManager) return;
+
+    const exercises = this.examManager.getExercises().filter(ex => ex.type === type);
+    container.innerHTML = '';
+
+    if (exercises.length === 0) {
+      container.innerHTML = '<div class="text-center py-8 text-slate-400 text-xs">لا توجد تمارين متاحة حالياً.</div>';
+      return;
+    }
+
+    exercises.forEach(ex => {
+      const card = document.createElement('div');
+      card.className = 'p-4 rounded-xl bg-slate-950 border border-slate-800 hover:border-slate-700 transition flex items-center justify-between gap-4 flex-wrap';
+
+      const diffBadge = ex.difficulty === 'easy'
+        ? '<span class="px-2 py-0.5 rounded text-[11px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">مبتدئ (Facile)</span>'
+        : ex.difficulty === 'medium'
+        ? '<span class="px-2 py-0.5 rounded text-[11px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">متوسط (Moyen)</span>'
+        : '<span class="px-2 py-0.5 rounded text-[11px] font-bold bg-rose-500/20 text-rose-300 border border-rose-500/30">متقدم (Avancé)</span>';
+
+      const typeBadge = ex.type === 'build'
+        ? '<span class="px-2 py-0.5 rounded text-[11px] font-bold bg-blue-500/20 text-blue-300 border border-blue-500/30">تركيب من الصفر</span>'
+        : '<span class="px-2 py-0.5 rounded text-[11px] font-bold bg-purple-500/20 text-purple-300 border border-purple-500/30">تشخيص أعطال</span>';
+
+      card.innerHTML = `
+        <div class="flex-1 min-w-[280px]">
+          <div class="flex items-center gap-2 flex-wrap mb-1">
+            <h4 class="text-sm font-bold text-white">${ex.titleAr}</h4>
+            ${typeBadge}
+            ${diffBadge}
+          </div>
+          <p class="text-xs text-slate-400 font-tech mb-1.5">${ex.titleFr}</p>
+          <p class="text-xs text-slate-300 leading-relaxed mb-2">${ex.descriptionAr}</p>
+          <div class="flex items-center gap-4 text-[11px] text-slate-400 font-semibold">
+            <span><i class="fa-regular fa-clock text-amber-400 ml-1"></i>المدة: ${ex.durationMinutes} دقيقة</span>
+            <span><i class="fa-solid fa-bullseye text-emerald-400 ml-1"></i>علامة النجاح: ${ex.passingScore}/100</span>
+            <span><i class="fa-solid fa-layer-group text-sky-400 ml-1"></i>المعيار: NFC 15-100</span>
+          </div>
+        </div>
+
+        <button data-start-exercise="${ex.id}" class="btn-action px-4 py-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-xs font-black shadow-lg shadow-blue-600/30 flex items-center gap-1.5 shrink-0">
+          <i class="fa-solid fa-play"></i>
+          <span>بدء الامتحان</span>
+        </button>
+      `;
+
+      const startBtn = card.querySelector(`[data-start-exercise="${ex.id}"]`);
+      if (startBtn) {
+        startBtn.addEventListener('click', () => {
+          this.startExamSession(ex.id);
+        });
+      }
+
+      container.appendChild(card);
+    });
+  }
+
+  startExamSession(exerciseId) {
+    if (!this.examManager) return;
+    const ok = this.examManager.startExam(exerciseId);
+    if (!ok) {
+      this.showToast('تعذر بدء الامتحان', 'error');
+      return;
+    }
+
+    // Hide selection modal
+    const modal = document.getElementById('examSelectionModal');
+    if (modal) modal.classList.add('hidden');
+
+    // Show active exam banner
+    const activeBar = document.getElementById('examActiveBar');
+    const titleEl = document.getElementById('examActiveTitle');
+    const subEl = document.getElementById('examActiveSubtitle');
+    const badgeType = document.getElementById('examActiveBadgeType');
+
+    const ex = this.examManager.currentExercise;
+    if (activeBar) activeBar.classList.remove('hidden');
+    if (titleEl) titleEl.textContent = ex.titleAr;
+    if (subEl) subEl.textContent = ex.titleFr;
+    if (badgeType) {
+      badgeType.textContent = ex.type === 'build' ? 'امتحان: تركيب من الصفر' : 'امتحان: تشخيص وإصلاح الأعطال';
+    }
+
+    // Hide solution button so student cannot cheat during exam
+    const btnSol = document.getElementById('btnSolution');
+    if (btnSol) btnSol.classList.add('hidden');
+
+    // Update diagnostic UI to neutral exam message
+    this.updateDiagnosticsUI({
+      status: 'exam',
+      generalMessageAr: '🎯 بدأ الامتحان! راجع تعليمات المهمة وابدأ بالتوصيل. لن تظهر أي علامات أو أخطاء تصحيحية إلا بعد تسليم ورقة الامتحان.',
+      generalMessageFr: 'Épreuve en cours : câblage en autonomie.',
+      checks: [],
+      colorWarnings: []
+    });
+
+    this.showToast(`🎯 بدأ امتحان: "${ex.titleAr}". بالتوفيق!`, 'success');
+  }
+
+  updateExamTimerUI(remainingSeconds, totalSeconds) {
+    const timerDisplay = document.getElementById('examTimerDisplay');
+    const timerContainer = document.getElementById('examTimerContainer');
+    if (!timerDisplay) return;
+
+    const mins = Math.floor(Math.max(0, remainingSeconds) / 60);
+    const secs = Math.max(0, remainingSeconds) % 60;
+    const formatted = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+    timerDisplay.textContent = formatted;
+
+    // Urgent warning styling if less than 60 seconds
+    if (remainingSeconds <= 60 && timerContainer) {
+      timerContainer.classList.add('exam-timer-urgent');
+    } else if (timerContainer) {
+      timerContainer.classList.remove('exam-timer-urgent');
+    }
+  }
+
+  openTasksModal() {
+    if (!this.examManager || !this.examManager.currentExercise) return;
+    const ex = this.examManager.currentExercise;
+
+    const modal = document.getElementById('examTasksModal');
+    const title = document.getElementById('examTasksModalTitle');
+    const desc = document.getElementById('examTasksDescription');
+    const list = document.getElementById('examTasksList');
+
+    if (title) title.textContent = `تعليمات: ${ex.titleAr}`;
+    if (desc) desc.textContent = ex.descriptionAr;
+    if (list) {
+      list.innerHTML = '';
+      (ex.tasksAr || []).forEach(task => {
+        const li = document.createElement('li');
+        li.className = 'flex items-start gap-2 p-2 rounded-lg bg-slate-950 border border-slate-800 text-slate-300';
+        li.innerHTML = `<span class="text-sky-400 font-bold">•</span><span>${task}</span>`;
+        list.appendChild(li);
+      });
+    }
+
+    if (modal) modal.classList.remove('hidden');
+  }
+
+  submitExam() {
+    if (!this.examManager) return;
+    const report = this.examManager.submitExam(false);
+    if (!report) return;
+
+    if (window.soundEngine) {
+      if (report.passed) window.soundEngine.playSuccessBell();
+      else window.soundEngine.playWarningSound();
+    }
+
+    this.renderExamResultsUI(report);
+  }
+
+  autoSubmitExam() {
+    if (!this.examManager) return;
+    const report = this.examManager.submitExam(true);
+    if (!report) return;
+
+    this.showToast('⏰ انتهى الوقت المحدد للامتحان! تم تسليم الإجابة تلقائياً.', 'warning');
+    this.renderExamResultsUI(report);
+  }
+
+  cancelExam() {
+    if (!this.examManager) return;
+    this.examManager.cancelExam();
+
+    // Hide active exam banner
+    const activeBar = document.getElementById('examActiveBar');
+    if (activeBar) activeBar.classList.add('hidden');
+
+    // Restore solution button
+    const btnSol = document.getElementById('btnSolution');
+    if (btnSol) btnSol.classList.remove('hidden');
+
+    this.showToast('تم إلغاء الامتحان واستعادة اللوحة السابقة بنجاح', 'info');
+  }
+
+  exitExam() {
+    if (!this.examManager) return;
+    this.examManager.exitExamMode();
+
+    // Hide results modal and active bar
+    const modal = document.getElementById('examResultsModal');
+    if (modal) modal.classList.add('hidden');
+
+    const activeBar = document.getElementById('examActiveBar');
+    if (activeBar) activeBar.classList.add('hidden');
+
+    // Restore solution button
+    const btnSol = document.getElementById('btnSolution');
+    if (btnSol) btnSol.classList.remove('hidden');
+
+    this.showToast('تم إنهاء المراجعة والعودة إلى لوحة التدريب السابقة', 'success');
+  }
+
+  renderExamResultsUI(report) {
+    const modal = document.getElementById('examResultsModal');
+    if (!modal || !report) return;
+
+    // Header & Score
+    const scoreDisplay = document.getElementById('examResultScoreDisplay');
+    const badge = document.getElementById('examResultStatusBadge');
+    const nameEl = document.getElementById('examResultExerciseName');
+    const timeEl = document.getElementById('examResultTimeTaken');
+    const banner = document.getElementById('examResultBanner');
+
+    if (scoreDisplay) scoreDisplay.innerHTML = `${report.totalScore}<span class="text-sm text-slate-400 font-normal">/100</span>`;
+    if (nameEl) nameEl.textContent = `${report.exerciseTitleAr} (${report.exerciseTitleFr})`;
+
+    const mins = Math.floor(report.timeTakenSeconds / 60);
+    const secs = report.timeTakenSeconds % 60;
+    if (timeEl) timeEl.textContent = `الوقت المستغرق: ${mins} دقيقة و ${secs} ثانية ${report.autoSubmitted ? '(انتهى الوقت)' : ''}`;
+
+    if (badge && banner) {
+      if (report.passed) {
+        badge.className = 'inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 mb-1';
+        badge.textContent = '● ناجح مؤهل (Admis)';
+        banner.className = 'p-4 rounded-2xl bg-gradient-to-r from-emerald-950/70 to-slate-900 border border-emerald-500/40 flex items-center justify-between gap-4 flex-wrap';
+      } else {
+        badge.className = 'inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black bg-rose-500/20 text-rose-300 border border-rose-500/40 mb-1';
+        badge.textContent = '✕ راسب بحاجة لإعادة المحاولة (Ajourné)';
+        banner.className = 'p-4 rounded-2xl bg-gradient-to-r from-rose-950/70 to-slate-900 border border-rose-500/40 flex items-center justify-between gap-4 flex-wrap';
+      }
+    }
+
+    // Breakdown
+    const sConn = document.getElementById('scoreConnVal');
+    const sRel = document.getElementById('scoreRelVal');
+    const sColor = document.getElementById('scoreColorVal');
+    const sHyg = document.getElementById('scoreHygVal');
+    if (sConn) sConn.textContent = `${report.scoreBreakdown.connections}/${report.scoreBreakdown.maxConnections}`;
+    if (sRel) sRel.textContent = `${report.scoreBreakdown.relationships}/${report.scoreBreakdown.maxRelationships}`;
+    if (sColor) sColor.textContent = `${report.scoreBreakdown.colors}/${report.scoreBreakdown.maxColors}`;
+    if (sHyg) sHyg.textContent = `${report.scoreBreakdown.hygiene}/${report.scoreBreakdown.maxHygiene}`;
+
+    // General feedback
+    const feedbackBox = document.getElementById('examResultFeedbackBox');
+    if (feedbackBox) {
+      feedbackBox.innerHTML = `
+        <div class="mb-1 text-white font-bold">${report.generalFeedbackAr}</div>
+        <div class="text-[11px] text-slate-400 font-tech">${report.generalFeedbackFr}</div>
+      `;
+    }
+
+    // Faults list (Type B)
+    const faultsBox = document.getElementById('examFaultsContainer');
+    const faultsList = document.getElementById('examFaultsList');
+    if (faultsBox && faultsList) {
+      if (report.exerciseType === 'fault' && report.faultsStatus && report.faultsStatus.length > 0) {
+        faultsBox.classList.remove('hidden');
+        faultsList.innerHTML = '';
+        report.faultsStatus.forEach(f => {
+          const row = document.createElement('div');
+          row.className = `p-2 rounded-lg border flex items-center justify-between gap-2 ${
+            f.resolved ? 'bg-emerald-950/40 border-emerald-800/50 text-emerald-300' : 'bg-rose-950/40 border-rose-800/50 text-rose-300'
+          }`;
+          row.innerHTML = `
+            <div class="flex items-center gap-2">
+              <i class="fa-solid ${f.resolved ? 'fa-check text-emerald-400' : 'fa-xmark text-rose-400'}"></i>
+              <span>${f.descriptionAr}</span>
+            </div>
+            <span class="text-[10px] font-bold px-2 py-0.5 rounded ${f.resolved ? 'bg-emerald-500/20 text-emerald-400' : 'bg-rose-500/20 text-rose-400'}">
+              ${f.resolved ? 'تم الإصلاح بنجاح' : 'العطل لا يزال قائماً'}
+            </span>
+          `;
+          faultsList.appendChild(row);
+        });
+      } else {
+        faultsBox.classList.add('hidden');
+      }
+    }
+
+    // Connections checklist
+    const detailsList = document.getElementById('examResultDetailsList');
+    if (detailsList) {
+      detailsList.innerHTML = '';
+      (report.connectionDetails || []).forEach(c => {
+        const item = document.createElement('div');
+        item.className = `p-2 rounded-lg border flex items-center justify-between gap-2 ${
+          c.satisfied ? 'bg-slate-950/80 border-emerald-800/40 text-slate-200' : 'bg-rose-950/30 border-rose-800/40 text-slate-300'
+        }`;
+        item.innerHTML = `
+          <div class="flex items-center gap-2">
+            <span class="w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold ${
+              c.satisfied ? 'bg-emerald-500/20 text-emerald-400' : 'bg-rose-500/20 text-rose-400'
+            }">${c.satisfied ? '✓' : '✕'}</span>
+            <div>
+              <div class="font-bold text-white text-xs">${c.nameAr} <span class="text-[11px] text-slate-400 font-tech">(${c.nameFr})</span></div>
+              <div class="text-[11px] ${c.satisfied ? 'text-slate-400' : 'text-rose-300'}">${c.message}</div>
+            </div>
+          </div>
+          <div class="font-mono-tech text-xs font-bold ${c.satisfied ? 'text-emerald-400' : 'text-rose-400'} shrink-0">
+            +${c.earned}/${c.points}
+          </div>
+        `;
+        detailsList.appendChild(item);
+      });
+    }
+
+    // Color issues
+    const colorBox = document.getElementById('examColorIssuesContainer');
+    const colorList = document.getElementById('examColorIssuesList');
+    if (colorBox && colorList) {
+      if (report.colorIssues && report.colorIssues.length > 0) {
+        colorBox.classList.remove('hidden');
+        colorList.innerHTML = '';
+        report.colorIssues.forEach(ci => {
+          const div = document.createElement('div');
+          div.className = 'p-2 rounded-lg bg-rose-950/40 border border-rose-800/50 text-rose-300 text-xs flex items-center gap-2';
+          div.innerHTML = `<i class="fa-solid fa-triangle-exclamation text-rose-400 shrink-0"></i><span>${ci.messageAr}</span>`;
+          colorList.appendChild(div);
+        });
+      } else {
+        colorBox.classList.add('hidden');
+      }
+    }
+
+    modal.classList.remove('hidden');
+  }
+
+  openExamHistoryModal() {
+    const modal = document.getElementById('examHistoryModal');
+    if (modal) modal.classList.remove('hidden');
+    this.renderExamHistoryUI();
+  }
+
+  renderExamHistoryUI() {
+    const container = document.getElementById('examHistoryList');
+    const emptyState = document.getElementById('examHistoryEmpty');
+    if (!container || !this.examManager) return;
+
+    const history = this.examManager.getExamHistory();
+    if (history.length === 0) {
+      container.innerHTML = '';
+      if (emptyState) emptyState.classList.remove('hidden');
+      return;
+    }
+
+    if (emptyState) emptyState.classList.add('hidden');
+    container.innerHTML = '';
+
+    history.forEach(item => {
+      const card = document.createElement('div');
+      card.className = 'p-3 rounded-xl bg-slate-950 border border-slate-800 hover:border-slate-700 transition flex items-center justify-between gap-3';
+
+      const passBadge = item.passed
+        ? '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">ناجح (Admis)</span>'
+        : '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-500/20 text-rose-300 border border-rose-500/30">راسب (Ajourné)</span>';
+
+      card.innerHTML = `
+        <div class="flex items-center gap-3 overflow-hidden">
+          <div class="w-9 h-9 rounded-lg ${item.passed ? 'bg-emerald-950/60 text-emerald-400' : 'bg-rose-950/60 text-rose-400'} flex items-center justify-center shrink-0 border border-slate-700">
+            <i class="fa-solid ${item.passed ? 'fa-award' : 'fa-circle-xmark'}"></i>
+          </div>
+          <div class="overflow-hidden">
+            <div class="flex items-center gap-2 flex-wrap">
+              <span class="font-bold text-xs text-white truncate">${item.exerciseTitleAr}</span>
+              ${passBadge}
+            </div>
+            <div class="text-[11px] text-slate-400 mt-0.5 flex items-center gap-3">
+              <span><i class="fa-regular fa-calendar ml-1 text-slate-500"></i>${item.dateStr}</span>
+              <span><i class="fa-regular fa-clock ml-1 text-slate-500"></i>${Math.floor(item.timeTakenSeconds / 60)}د ${item.timeTakenSeconds % 60}ث</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-2 shrink-0">
+          <span class="font-mono-tech text-base font-black ${item.passed ? 'text-emerald-400' : 'text-rose-400'}">${item.totalScore}/100</span>
+          <button data-delete-exam-id="${item.id}" class="btn-action p-1.5 rounded-lg bg-rose-950/40 hover:bg-rose-900/60 text-rose-300 border border-rose-800/40 text-xs" title="حذف من السجل">
+            <i class="fa-solid fa-trash-can"></i>
+          </button>
+        </div>
+      `;
+
+      const delBtn = card.querySelector(`[data-delete-exam-id="${item.id}"]`);
+      if (delBtn) {
+        delBtn.addEventListener('click', () => {
+          this.examManager.deleteExamHistoryItem(item.id);
+          this.renderExamHistoryUI();
+        });
+      }
+
+      container.appendChild(card);
+    });
   }
 
   // ANIMATION LOOP: STRICT Z-INDEX WIRE LAYERING GUARANTEE
