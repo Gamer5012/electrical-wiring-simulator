@@ -464,6 +464,149 @@ class MobileComponentManager extends ComponentManager {
     this.rebuildTerminalsIndex();
   }
 
+  // 5. MINUTERIE ÉLECTRIQUE (MIN 15363) - Portrait Mobile
+  setupMinuterie() {
+    const cx = Math.floor(this.canvasW / 2);
+
+    // Top: Disjoncteur 16A and Minuterie side by side
+    const topW = Math.min(155, Math.floor((this.canvasW - 32) / 2));
+    const q1X = cx - topW - 6;
+    const min1X = cx + 6;
+
+    this.addComponent({
+      id: 'q1',
+      type: 'disjoncteur',
+      x: q1X,
+      y: 15,
+      width: topW,
+      height: 180,
+      labelFr: 'Disjoncteur 16A',
+      labelAr: 'قاطع الدارة 16A',
+      state: { isOn: true },
+      terminals: [
+        { id: 'q1_L', name: 'Disjoncteur: L', code: 'L', xOffset: 32, yOffset: 165, dir: 'bottom', type: 'phase' },
+        { id: 'q1_N', name: 'Disjoncteur: N', code: 'N', xOffset: topW - 32, yOffset: 165, dir: 'bottom', type: 'neutre' },
+        { id: 'q1_PE', name: 'Barrette PE', code: 'PE', xOffset: Math.floor(topW / 2), yOffset: 25, dir: 'top', type: 'terre' }
+      ]
+    });
+
+    this.addComponent({
+      id: 'min1',
+      type: 'minuterie',
+      x: min1X,
+      y: 15,
+      width: topW,
+      height: 180,
+      labelFr: 'Minuterie 15363',
+      labelAr: 'مؤقت الإنارة (MIN)',
+      state: {
+        isClosed: false,
+        isTiming: false,
+        mode: 'auto',
+        durationSeconds: 30,
+        remainingSeconds: 0
+      },
+      terminals: [
+        { id: 'min_L', name: 'MIN: L', code: 'L', xOffset: 20, yOffset: 165, dir: 'bottom', type: 'phase' },
+        { id: 'min_N', name: 'MIN: N', code: 'N', xOffset: Math.floor(topW * 0.40), yOffset: 165, dir: 'bottom', type: 'neutre' },
+        { id: 'min_3', name: 'MIN: 3', code: '3', xOffset: Math.floor(topW * 0.68), yOffset: 165, dir: 'bottom', type: 'retour' },
+        { id: 'min_4', name: 'MIN: 4', code: '4', xOffset: topW - 20, yOffset: 165, dir: 'bottom', type: 'navette' }
+      ]
+    });
+
+    // Middle: 3 Push Buttons in a horizontal row
+    const bpW = Math.min(110, Math.floor((this.canvasW - 24) / 3));
+    const gap = Math.floor((this.canvasW - (bpW * 3)) / 4);
+
+    this.addComponent({
+      id: 'bp1',
+      type: 'push_button',
+      x: gap,
+      y: 220,
+      width: bpW,
+      height: 140,
+      labelFr: 'BP1 (RDC)',
+      labelAr: 'زر 1 (طابق 0)',
+      state: { isPressed: false },
+      terminals: [
+        { id: 'bp1_L', name: 'BP1: L', code: 'L', xOffset: 22, yOffset: 120, dir: 'bottom', type: 'phase' },
+        { id: 'bp1_out', name: 'BP1: Sortie', code: '⭳', xOffset: bpW - 22, yOffset: 120, dir: 'bottom', type: 'navette' }
+      ]
+    });
+
+    this.addComponent({
+      id: 'bp2',
+      type: 'push_button',
+      x: gap * 2 + bpW,
+      y: 220,
+      width: bpW,
+      height: 140,
+      labelFr: 'BP2 (Étage 1)',
+      labelAr: 'زر 2 (طابق 1)',
+      state: { isPressed: false },
+      terminals: [
+        { id: 'bp2_L', name: 'BP2: L', code: 'L', xOffset: 22, yOffset: 120, dir: 'bottom', type: 'phase' },
+        { id: 'bp2_out', name: 'BP2: Sortie', code: '⭳', xOffset: bpW - 22, yOffset: 120, dir: 'bottom', type: 'navette' }
+      ]
+    });
+
+    this.addComponent({
+      id: 'bp3',
+      type: 'push_button',
+      x: gap * 3 + bpW * 2,
+      y: 220,
+      width: bpW,
+      height: 140,
+      labelFr: 'BP3 (Étage 2)',
+      labelAr: 'زر 3 (طابق 2)',
+      state: { isPressed: false },
+      terminals: [
+        { id: 'bp3_L', name: 'BP3: L', code: 'L', xOffset: 22, yOffset: 120, dir: 'bottom', type: 'phase' },
+        { id: 'bp3_out', name: 'BP3: Sortie', code: '⭳', xOffset: bpW - 22, yOffset: 120, dir: 'bottom', type: 'navette' }
+      ]
+    });
+
+    // Bottom: 2 Lamps (E1, E2)
+    const lampW = Math.min(160, Math.floor((this.canvasW - 32) / 2));
+    const lampGap = Math.floor((this.canvasW - (lampW * 2)) / 3);
+
+    this.addComponent({
+      id: 'e1',
+      type: 'lamp',
+      x: lampGap,
+      y: 400,
+      width: lampW,
+      height: 190,
+      labelFr: 'Lampe E1',
+      labelAr: 'المصباح E1',
+      state: { isLit: false },
+      terminals: [
+        { id: 'e1_L', name: 'E1: L', code: 'L', xOffset: 24, yOffset: 165, dir: 'bottom', type: 'retour' },
+        { id: 'e1_N', name: 'E1: N', code: 'N', xOffset: Math.floor(lampW / 2), yOffset: 165, dir: 'bottom', type: 'neutre' },
+        { id: 'e1_PE', name: 'E1: PE', code: 'PE', xOffset: lampW - 24, yOffset: 165, dir: 'bottom', type: 'terre' }
+      ]
+    });
+
+    this.addComponent({
+      id: 'e2',
+      type: 'lamp',
+      x: lampGap * 2 + lampW,
+      y: 400,
+      width: lampW,
+      height: 190,
+      labelFr: 'Lampe E2',
+      labelAr: 'المصباح E2 (توازي)',
+      state: { isLit: false },
+      terminals: [
+        { id: 'e2_L', name: 'E2: L', code: 'L', xOffset: 24, yOffset: 165, dir: 'bottom', type: 'retour' },
+        { id: 'e2_N', name: 'E2: N', code: 'N', xOffset: Math.floor(lampW / 2), yOffset: 165, dir: 'bottom', type: 'neutre' },
+        { id: 'e2_PE', name: 'E2: PE', code: 'PE', xOffset: lampW - 24, yOffset: 165, dir: 'bottom', type: 'terre' }
+      ]
+    });
+
+    this.rebuildTerminalsIndex();
+  }
+
   // Generous touch hit detection with magnetic snapping to closest pin
   getTerminalAt(x, y, tolerance = 40) {
     let closest = null;
@@ -516,6 +659,29 @@ class MobileComponentManager extends ComponentManager {
           comp.state.isClosed = !comp.state.isClosed;
           if (window.soundEngine) window.soundEngine.playRelayClack();
           handled = true;
+        } else if (comp.type === 'minuterie') {
+          // Check if touching top-right slider area (mode auto / permanent)
+          const sliderY = comp.y + (comp.height * 0.45);
+          if (y <= sliderY && x >= comp.x + comp.width * 0.5) {
+            comp.state.mode = comp.state.mode === 'auto' ? 'permanent' : 'auto';
+            if (comp.state.mode === 'permanent') {
+              comp.state.isClosed = true;
+            } else if (!comp.state.isTiming) {
+              comp.state.isClosed = false;
+            }
+            if (window.soundEngine) window.soundEngine.playSwitchClick(comp.state.mode === 'permanent');
+            handled = true;
+          } else {
+            // Cycle duration (10s, 30s, 1m, 2m, 3m, 5m, 6.5m)
+            const durations = [10, 30, 60, 120, 180, 300, 390];
+            const currIdx = durations.indexOf(comp.state.durationSeconds || 30);
+            const nextIdx = (currIdx + 1) % durations.length;
+            comp.state.durationSeconds = durations[nextIdx];
+            comp.state.durationMinutes = Math.round((comp.state.durationSeconds / 60) * 10) / 10;
+            if (window.soundEngine) window.soundEngine.playSwitchClick(true);
+            handled = true;
+          }
+          if (currentApp) currentApp.evaluateCircuit();
         }
       }
     }

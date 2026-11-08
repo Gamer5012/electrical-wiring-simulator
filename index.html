@@ -145,10 +145,16 @@
         <span>4. المرحل النبضي (Télérupteur 4 Fils - 3 أزرار)</span>
       </button>
 
-      <!-- 5. PROMINENT EXAM MODE TAB -->
+      <!-- 5. MINUTERIE ÉLECTRIQUE (MIN 15363) -->
+      <button data-mode="MIN" class="btn-action px-3 py-2 rounded-lg text-xs font-bold flex items-center gap-2 whitespace-nowrap bg-slate-800 text-slate-300 hover:bg-slate-700 transition">
+        <i class="fa-solid fa-stopwatch text-sky-400"></i>
+        <span>5. مؤقت الإنارة (Minuterie Schneider 15363)</span>
+      </button>
+
+      <!-- PROMINENT EXAM MODE TAB -->
       <button id="tabNavExamMode" class="btn-action px-3.5 py-2 rounded-lg text-xs font-black flex items-center gap-2 whitespace-nowrap bg-gradient-to-r from-amber-500 via-rose-500 to-red-600 hover:from-amber-400 hover:to-red-500 text-white shadow-lg shadow-rose-600/40 border border-rose-400/50 transition">
         <i class="fa-solid fa-graduation-cap text-yellow-200 text-sm animate-pulse"></i>
-        <span>🎯 5. وضع الامتحان المهني (Mode Examen NFC 15-100)</span>
+        <span>🎯 وضع الامتحان المهني (Mode Examen NFC 15-100)</span>
       </button>
     </div>
   </nav>
@@ -211,6 +217,11 @@
         <button data-add-component="telerupteur" class="btn-action px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold border border-slate-700 flex items-center gap-1.5 whitespace-nowrap" title="Ajouter un Télérupteur 4 Fils">
           <i class="fa-solid fa-clock text-purple-400"></i>
           <span>+ مرحل نبضي (TL)</span>
+        </button>
+
+        <button data-add-component="minuterie" class="btn-action px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold border border-slate-700 flex items-center gap-1.5 whitespace-nowrap" title="Ajouter une Minuterie d'Escalier Schneider 15363">
+          <i class="fa-solid fa-stopwatch text-sky-400"></i>
+          <span>+ مؤقت إنارة (MIN)</span>
         </button>
 
         <button data-add-component="lamp" class="btn-action px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold border border-slate-700 flex items-center gap-1.5 whitespace-nowrap" title="Ajouter une Lampe Bornier DCL (L, N, PE)">

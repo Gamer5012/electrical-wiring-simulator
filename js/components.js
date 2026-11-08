@@ -44,6 +44,9 @@ class ComponentManager {
       case 'TL':
         this.setupTelerupteur();
         break;
+      case 'MIN':
+        this.setupMinuterie();
+        break;
     }
   }
 
@@ -460,6 +463,138 @@ class ComponentManager {
     this.rebuildTerminalsIndex();
   }
 
+  // 5. MINUTERIE ÉLECTRIQUE SCHNEIDER 15363 (CAGE D'ESCALIER - 4 FILS)
+  setupMinuterie() {
+    // 1. Disjoncteur 16A (Q1)
+    this.addComponent({
+      id: 'q1',
+      type: 'disjoncteur',
+      x: 30,
+      y: 140,
+      width: 130,
+      height: 260,
+      labelFr: 'Disjoncteur 16A',
+      labelAr: 'قاطع الدارة 16A',
+      state: { isOn: true },
+      terminals: [
+        { id: 'q1_L', name: 'Disjoncteur: Borne L (Phase)', code: 'L', xOffset: 40, yOffset: 240, dir: 'bottom', type: 'phase' },
+        { id: 'q1_N', name: 'Disjoncteur: Borne N (Neutre)', code: 'N', xOffset: 90, yOffset: 240, dir: 'bottom', type: 'neutre' },
+        { id: 'q1_PE', name: 'Barrette de Terre: Borne PE', code: 'PE', xOffset: 65, yOffset: 25, dir: 'top', type: 'terre' }
+      ]
+    });
+
+    // 2. Minuterie Schneider Electric 15363 (MIN1)
+    this.addComponent({
+      id: 'min1',
+      type: 'minuterie',
+      x: 180,
+      y: 140,
+      width: 150,
+      height: 260,
+      labelFr: 'Minuterie Schneider 15363',
+      labelAr: 'مؤقت الإنارة (15363)',
+      state: {
+        isClosed: false,
+        isTiming: false,
+        mode: 'auto',
+        durationSeconds: 30,
+        remainingSeconds: 0
+      },
+      terminals: [
+        { id: 'min_L', name: 'Minuterie: Borne L (Phase 230V)', code: 'L', xOffset: 28, yOffset: 240, dir: 'bottom', type: 'phase' },
+        { id: 'min_N', name: 'Minuterie: Borne N (Neutre)', code: 'N', xOffset: 65, yOffset: 240, dir: 'bottom', type: 'neutre' },
+        { id: 'min_3', name: 'Minuterie: Borne 3 (Sortie Lampes ⊗)', code: '3', xOffset: 100, yOffset: 240, dir: 'bottom', type: 'retour' },
+        { id: 'min_4', name: 'Minuterie: Borne 4 (Retour Boutons ⭳)', code: '4', xOffset: 130, yOffset: 240, dir: 'bottom', type: 'navette' }
+      ]
+    });
+
+    // 3. Three Push Buttons in parallel (BP1, BP2, BP3)
+    this.addComponent({
+      id: 'bp1',
+      type: 'push_button',
+      x: 360,
+      y: 40,
+      width: 120,
+      height: 135,
+      labelFr: 'BP1 (RDC)',
+      labelAr: 'زر ضاغط 1 (طابق 0)',
+      state: { isPressed: false },
+      terminals: [
+        { id: 'bp1_L', name: 'BP1: Borne L', code: 'L', xOffset: 35, yOffset: 120, dir: 'bottom', type: 'phase' },
+        { id: 'bp1_out', name: 'BP1: Borne Sortie', code: '⭳', xOffset: 85, yOffset: 120, dir: 'bottom', type: 'navette' }
+      ]
+    });
+
+    this.addComponent({
+      id: 'bp2',
+      type: 'push_button',
+      x: 360,
+      y: 195,
+      width: 120,
+      height: 135,
+      labelFr: 'BP2 (Étage 1)',
+      labelAr: 'زر ضاغط 2 (طابق 1)',
+      state: { isPressed: false },
+      terminals: [
+        { id: 'bp2_L', name: 'BP2: Borne L', code: 'L', xOffset: 35, yOffset: 120, dir: 'bottom', type: 'phase' },
+        { id: 'bp2_out', name: 'BP2: Borne Sortie', code: '⭳', xOffset: 85, yOffset: 120, dir: 'bottom', type: 'navette' }
+      ]
+    });
+
+    this.addComponent({
+      id: 'bp3',
+      type: 'push_button',
+      x: 360,
+      y: 350,
+      width: 120,
+      height: 135,
+      labelFr: 'BP3 (Étage 2)',
+      labelAr: 'زر ضاغط 3 (طابق 2)',
+      state: { isPressed: false },
+      terminals: [
+        { id: 'bp3_L', name: 'BP3: Borne L', code: 'L', xOffset: 35, yOffset: 120, dir: 'bottom', type: 'phase' },
+        { id: 'bp3_out', name: 'BP3: Borne Sortie', code: '⭳', xOffset: 85, yOffset: 120, dir: 'bottom', type: 'navette' }
+      ]
+    });
+
+    // 4. Two Lamps in parallel (E1, E2)
+    this.addComponent({
+      id: 'e1',
+      type: 'lamp',
+      x: 580,
+      y: 130,
+      width: 165,
+      height: 230,
+      labelFr: 'Lampe E1 (Palier 1)',
+      labelAr: 'المصباح E1 (بسطة 1)',
+      state: { isLit: false },
+      terminals: [
+        { id: 'e1_L', name: 'Lampe E1: Borne L', code: 'L', xOffset: 30, yOffset: 205, dir: 'bottom', type: 'retour' },
+        { id: 'e1_N', name: 'Lampe E1: Borne N', code: 'N', xOffset: 82, yOffset: 205, dir: 'bottom', type: 'neutre' },
+        { id: 'e1_PE', name: 'Lampe E1: Borne PE', code: 'PE', xOffset: 135, yOffset: 205, dir: 'bottom', type: 'terre' }
+      ]
+    });
+
+    this.addComponent({
+      id: 'e2',
+      type: 'lamp',
+      x: 780,
+      y: 130,
+      width: 165,
+      height: 230,
+      labelFr: 'Lampe E2 (Palier 2)',
+      labelAr: 'المصباح E2 (بسطة 2)',
+      state: { isLit: false },
+      terminals: [
+        { id: 'e2_L', name: 'Lampe E2: Borne L', code: 'L', xOffset: 30, yOffset: 205, dir: 'bottom', type: 'retour' },
+        { id: 'e2_N', name: 'Lampe E2: Borne N', code: 'N', xOffset: 82, yOffset: 205, dir: 'bottom', type: 'neutre' },
+        { id: 'e2_PE', name: 'Lampe E2: Borne PE', code: 'PE', xOffset: 135, yOffset: 205, dir: 'bottom', type: 'terre' }
+      ]
+    });
+
+    this.rebuildTerminalsIndex();
+  }
+
   addComponent(comp) {
     this.components.push(comp);
   }
@@ -598,6 +733,36 @@ class ComponentManager {
             { id: `${id}_A1`, name: `${labelFr}: Borne A1`, code: 'A1', xOffset: 100, yOffset: 25, dir: 'top', type: 'navette' },
             { id: `${id}_2`, name: `${labelFr}: Borne 2`, code: '2', xOffset: 40, yOffset: 240, dir: 'bottom', type: 'retour' },
             { id: `${id}_A2`, name: `${labelFr}: Borne A2`, code: 'A2', xOffset: 100, yOffset: 240, dir: 'bottom', type: 'neutre' }
+          ]
+        };
+        break;
+      }
+
+      case 'minuterie': {
+        const minCount = this.components.filter(c => c.type === 'minuterie').length + 1;
+        const id = options.id || `min_${idSuffix}`;
+        const labelFr = options.labelFr || `Minuterie ${minCount}`;
+        const labelAr = options.labelAr || `مؤقت الإنارة ${minCount}`;
+        comp = {
+          id,
+          type: 'minuterie',
+          x, y,
+          width: 150,
+          height: 260,
+          labelFr,
+          labelAr,
+          state: {
+            isClosed: false,
+            isTiming: false,
+            mode: 'auto',
+            durationSeconds: 30,
+            remainingSeconds: 0
+          },
+          terminals: [
+            { id: `${id}_L`, name: `${labelFr}: Borne L (Phase)`, code: 'L', xOffset: 28, yOffset: 240, dir: 'bottom', type: 'phase' },
+            { id: `${id}_N`, name: `${labelFr}: Borne N (Neutre)`, code: 'N', xOffset: 65, yOffset: 240, dir: 'bottom', type: 'neutre' },
+            { id: `${id}_3`, name: `${labelFr}: Borne 3 (Sortie ⊗)`, code: '3', xOffset: 100, yOffset: 240, dir: 'bottom', type: 'retour' },
+            { id: `${id}_4`, name: `${labelFr}: Borne 4 (Retour ⭳)`, code: '4', xOffset: 130, yOffset: 240, dir: 'bottom', type: 'navette' }
           ]
         };
         break;
@@ -819,6 +984,30 @@ class ComponentManager {
             if (window.soundEngine) window.soundEngine.playRelayClack();
             handled = true;
           }
+        } else if (comp.type === 'minuterie') {
+          // Check if clicked the mode slide switch (auto / ☼) on the right
+          const switchX = comp.x + comp.width - 62;
+          const switchY = comp.y + 106;
+          if (x >= switchX - 10 && x <= switchX + 58 && y >= switchY - 10 && y <= switchY + 32) {
+            comp.state.mode = comp.state.mode === 'auto' ? 'permanent' : 'auto';
+            if (comp.state.mode === 'permanent') {
+              comp.state.isClosed = true;
+            } else if (!comp.state.isTiming) {
+              comp.state.isClosed = false;
+            }
+            if (window.soundEngine) window.soundEngine.playSwitchClick(comp.state.mode === 'permanent');
+            handled = true;
+          } else {
+            // Clicked dial or body to cycle duration (10s, 30s, 1m, 2m, 3m, 5m, 6.5m)
+            const durations = [10, 30, 60, 120, 180, 300, 390];
+            const currIdx = durations.indexOf(comp.state.durationSeconds || 30);
+            const nextIdx = (currIdx + 1) % durations.length;
+            comp.state.durationSeconds = durations[nextIdx];
+            comp.state.durationMinutes = Math.round((comp.state.durationSeconds / 60) * 10) / 10;
+            if (window.soundEngine) window.soundEngine.playSwitchClick(true);
+            handled = true;
+          }
+          if (window.app) window.app.evaluateCircuit();
         }
       }
     }
@@ -840,6 +1029,9 @@ class ComponentManager {
           break;
         case 'telerupteur':
           this.renderTelerupteur(ctx, comp);
+          break;
+        case 'minuterie':
+          this.renderMinuterie(ctx, comp);
           break;
         case 'push_button':
           this.renderPushButton(ctx, comp);
@@ -1168,6 +1360,225 @@ class ComponentManager {
     ctx.fillStyle = '#1e293b';
     ctx.font = 'bold 11px Cairo, sans-serif';
     ctx.fillText(labelAr, x + width / 2, y + 185);
+
+    ctx.restore();
+  }
+
+  renderMinuterie(ctx, comp) {
+    const { x, y, width, height, state, labelFr, labelAr } = comp;
+
+    ctx.save();
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.4)';
+    ctx.shadowBlur = 12;
+    ctx.shadowOffsetY = 4;
+
+    // Molded White/Light-Grey DIN-Rail Housing (1 Module width aesthetic)
+    ctx.fillStyle = '#f1f5f9';
+    ctx.strokeStyle = '#94a3b8';
+    ctx.lineWidth = 2;
+    this.roundRect(ctx, x, y, width, height, 8);
+    ctx.fill();
+    ctx.stroke();
+    ctx.shadowColor = 'transparent';
+
+    // Top Inset Engraved Diagram Panel
+    ctx.fillStyle = '#ffffff';
+    ctx.strokeStyle = '#cbd5e1';
+    ctx.lineWidth = 1;
+    this.roundRect(ctx, x + 8, y + 8, width - 16, 52, 4);
+    ctx.fill();
+    ctx.stroke();
+
+    // Miniature Engraved Schematic Diagram
+    ctx.strokeStyle = '#475569';
+    ctx.lineWidth = 1;
+    ctx.font = 'bold 8px "JetBrains Mono", monospace';
+    ctx.fillStyle = '#334155';
+    ctx.textAlign = 'center';
+
+    // Terminal identifiers engraved in top diagram: L, N, 3 ⊗, 4 ⭳
+    ctx.fillText('L', x + 20, y + 20);
+    ctx.fillText('N', x + 35, y + 20);
+
+    // Lamp symbol ⊗ connected to 3
+    ctx.fillText('3', x + width - 42, y + 20);
+    ctx.beginPath();
+    ctx.arc(x + width - 42, y + 31, 5, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(x + width - 45, y + 28);
+    ctx.lineTo(x + width - 39, y + 34);
+    ctx.moveTo(x + width - 45, y + 34);
+    ctx.lineTo(x + width - 39, y + 28);
+    ctx.stroke();
+
+    // Push button symbol ⭳ connected to 4
+    ctx.fillText('4', x + width - 20, y + 20);
+    ctx.beginPath();
+    ctx.moveTo(x + width - 24, y + 32);
+    ctx.lineTo(x + width - 16, y + 32);
+    ctx.moveTo(x + width - 20, y + 32);
+    ctx.lineTo(x + width - 20, y + 27);
+    ctx.moveTo(x + width - 23, y + 27);
+    ctx.lineTo(x + width - 17, y + 27);
+    ctx.stroke();
+
+    // Technical Ratings engraved in diagram box
+    ctx.font = '7px "JetBrains Mono", monospace';
+    ctx.fillStyle = '#64748b';
+    ctx.textAlign = 'left';
+    ctx.fillText('230V~ 16A cosφ=1', x + 14, y + 51);
+    ctx.textAlign = 'right';
+    ctx.fillText('50/60Hz', x + width - 14, y + 51);
+
+    // Center Molded White Panel: Brand & Controls
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(x + 8, y + 64, width - 16, 148);
+
+    // Brand Accent: Schneider Electric Green (#00843D / #009530)
+    ctx.fillStyle = '#00843D';
+    this.roundRect(ctx, x + 14, y + 70, 28, 9, 2);
+    ctx.fill();
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 7px Inter, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Schneider', x + 28, y + 77);
+
+    ctx.fillStyle = '#0f172a';
+    ctx.font = 'bold 10px Inter, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('Electric', x + 46, y + 78);
+
+    // Reference '15363' and 'MIN'
+    ctx.font = 'bold 12px "JetBrains Mono", monospace';
+    ctx.fillStyle = '#0f172a';
+    ctx.fillText('15363', x + 14, y + 95);
+
+    ctx.font = 'bold 10px Inter, sans-serif';
+    ctx.fillStyle = '#00843D';
+    ctx.textAlign = 'right';
+    ctx.fillText('MIN', x + width - 14, y + 95);
+
+    // Mode Slide Switch (auto / ☼) at top-right
+    const isPermanent = state.mode === 'permanent';
+    const switchX = x + width - 62;
+    const switchY = y + 104;
+    ctx.fillStyle = '#0f172a';
+    this.roundRect(ctx, switchX, switchY, 48, 22, 11);
+    ctx.fill();
+
+    // Slider knob
+    const knobX = isPermanent ? switchX + 28 : switchX + 4;
+    ctx.fillStyle = isPermanent ? '#eab308' : '#38bdf8';
+    ctx.beginPath();
+    ctx.arc(knobX + 8, switchY + 11, 8, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 8px Inter, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(isPermanent ? '☼' : 'min', knobX + 8, switchY + 14);
+
+    ctx.fillStyle = '#64748b';
+    ctx.font = '7px "JetBrains Mono", monospace';
+    ctx.fillText('auto', switchX + 12, switchY - 3);
+    ctx.fillText('☼ perm', switchX + 38, switchY - 3);
+
+    // Left: Notched Thumbwheel Timer Dial (Molette de réglage)
+    const dialX = x + 14;
+    const dialY = y + 104;
+    ctx.fillStyle = '#1e293b';
+    this.roundRect(ctx, dialX, dialY, 48, 40, 4);
+    ctx.fill();
+
+    // Thumbwheel notched ribs
+    ctx.strokeStyle = '#475569';
+    ctx.lineWidth = 1.5;
+    for (let r = 0; r < 5; r++) {
+      ctx.beginPath();
+      ctx.moveTo(dialX + 5 + r * 9, dialY + 4);
+      ctx.lineTo(dialX + 5 + r * 9, dialY + 18);
+      ctx.stroke();
+    }
+
+    // Dial scale marking (0.5 to 6.5 min)
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '7px "JetBrains Mono", monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText('0.5 - 6.5 < min', dialX + 24, dialY + 27);
+
+    // Current configured duration display
+    const durSec = state.durationSeconds || 30;
+    const durLabel = durSec < 60 ? `${durSec}s` : `${(durSec / 60).toFixed(1)}m`;
+    ctx.fillStyle = '#38bdf8';
+    ctx.font = 'bold 9px "JetBrains Mono", monospace';
+    ctx.fillText(`⏱ ${durLabel}`, dialX + 24, dialY + 37);
+
+    // Live Timing & Status Display (Center-Bottom)
+    const statusY = y + 152;
+    if (state.isTiming) {
+      // Actively timing: glowing amber badge with live countdown
+      ctx.fillStyle = '#ea580c';
+      this.roundRect(ctx, x + 14, statusY, width - 28, 24, 6);
+      ctx.fill();
+
+      // Pulsing LED dot
+      ctx.fillStyle = '#fef08a';
+      ctx.beginPath();
+      ctx.arc(x + 24, statusY + 12, 4, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 11px "JetBrains Mono", monospace';
+      ctx.textAlign = 'center';
+      const rem = state.remainingSeconds !== undefined ? state.remainingSeconds : durSec;
+      const mins = Math.floor(rem / 60);
+      const secs = rem % 60;
+      ctx.fillText(`⏳ ${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')} (ON)`, x + width / 2 + 6, statusY + 16);
+    } else if (isPermanent) {
+      // Permanent ON
+      ctx.fillStyle = '#ca8a04';
+      this.roundRect(ctx, x + 14, statusY, width - 28, 24, 6);
+      ctx.fill();
+
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 9px Inter, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('☼ MARCHE FORCÉE (ON)', x + width / 2, statusY + 16);
+    } else {
+      // Idle Auto
+      ctx.fillStyle = '#0f172a';
+      this.roundRect(ctx, x + 14, statusY, width - 28, 24, 6);
+      ctx.fill();
+
+      ctx.fillStyle = '#10b981';
+      ctx.beginPath();
+      ctx.arc(x + 24, statusY + 12, 3, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = 'bold 9px Inter, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('AUTO : PRÊT (OFF)', x + width / 2 + 6, statusY + 15);
+    }
+
+    // Arabic and French label at bottom
+    ctx.fillStyle = '#1e293b';
+    ctx.font = 'bold 10px Cairo, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(labelAr || 'مؤقت الإنارة (15363)', x + width / 2, y + 192);
+
+    ctx.fillStyle = '#64748b';
+    ctx.font = '8px Inter, sans-serif';
+    ctx.fillText("Cage d'escalier (4 Fils)", x + width / 2, y + 204);
+
+    // Staggered metallic screw terminal backgrounds at bottom
+    const tY = y + 240;
+    ctx.fillStyle = '#e2e8f0';
+    this.roundRect(ctx, x + 10, tY - 14, width - 20, 28, 4);
+    ctx.fill();
+    ctx.strokeStyle = '#94a3b8';
+    ctx.stroke();
 
     ctx.restore();
   }

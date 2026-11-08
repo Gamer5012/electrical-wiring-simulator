@@ -113,6 +113,7 @@ class CircuitEngine {
       success: true,
       breakerTripped: false,
       litLamps,
+      lampsLit: litLamps,
       phaseNodes: allPhaseNodes,
       neutreNodes: allNeutreNodes,
       terreNodes: allTerreNodes
@@ -163,6 +164,58 @@ class CircuitEngine {
         if (window.soundEngine) window.soundEngine.playRelayClack();
       }
     });
+
+    // Minuterie Électrique (Schneider Electric MIN 15363)
+    const minuteries = this.cm.components.filter(c => c.type === 'minuterie');
+    minuteries.forEach(min => {
+      const tL = min.terminals && min.terminals.find(t => t.code === 'L');
+      const tN = min.terminals && min.terminals.find(t => t.code === 'N');
+      const t3 = min.terminals && min.terminals.find(t => t.code === '3');
+      const t4 = min.terminals && min.terminals.find(t => t.code === '4');
+
+      const lId = tL ? tL.id : (this.cm.getTerminalById('min_L') ? 'min_L' : `${min.id}_L`);
+      const nId = tN ? tN.id : (this.cm.getTerminalById('min_N') ? 'min_N' : `${min.id}_N`);
+      const t3Id = t3 ? t3.id : (this.cm.getTerminalById('min_3') ? 'min_3' : `${min.id}_3`);
+      const t4Id = t4 ? t4.id : (this.cm.getTerminalById('min_4') ? 'min_4' : `${min.id}_4`);
+
+      const hasPhasePower = allPhaseNodes.has(lId);
+      const hasNeutrePower = allNeutreNodes.has(nId);
+
+      // In Schneider MIN 15363 4-wire, buttons pulse phase to terminal 4 (or 3)
+      const ctrlPulsed = allPhaseNodes.has(t4Id) || allPhaseNodes.has(t3Id);
+
+      if (hasPhasePower && hasNeutrePower && ctrlPulsed) {
+        // Trigger or Re-arm timer
+        min.state.isClosed = true;
+        min.state.isTiming = true;
+        min.state.remainingSeconds = min.state.durationSeconds || 30;
+
+        if (window.soundEngine) window.soundEngine.playRelayClack();
+
+        if (min._timerInterval) {
+          clearInterval(min._timerInterval);
+        }
+
+        min._timerInterval = setInterval(() => {
+          if (min.state.remainingSeconds > 0) {
+            min.state.remainingSeconds--;
+          }
+          if (min.state.remainingSeconds <= 0) {
+            clearInterval(min._timerInterval);
+            min._timerInterval = null;
+            min.state.isTiming = false;
+            if (min.state.mode !== 'permanent') {
+              min.state.isClosed = false;
+            }
+            if (window.soundEngine) window.soundEngine.playRelayClack();
+            const currentApp = window.app || window.mobileApp;
+            if (currentApp && currentApp.evaluateCircuit) currentApp.evaluateCircuit();
+          }
+          const currentApp = window.app || window.mobileApp;
+          if (currentApp && currentApp.render) currentApp.render();
+        }, 1000);
+      }
+    });
   }
 
   evaluateAudit() {
@@ -202,6 +255,9 @@ class CircuitEngine {
         break;
       case 'TL':
         this.auditTelerupteur(report);
+        break;
+      case 'MIN':
+        this.auditMinuterie(report);
         break;
       default:
         this.auditCustomCircuit(report);
@@ -545,6 +601,98 @@ class CircuitEngine {
     }
   }
 
+  // 5. AUDIT MINUTERIE ÉLECTRIQUE SCHNEIDER 15363 (NFC 15-100)
+  auditMinuterie(report) {
+    const rawGraph = this.buildWiringOnlyGraph();
+
+    // 1. Minuterie Power Supply (Phase -> MIN:L)
+    const minLId = this.cm.getTerminalById('min_L') ? 'min_L' : 'min1_L';
+    const phaseToMin = this.pathExists('q1_L', minLId, rawGraph);
+    report.checks.push({
+      label: 'تغذية مؤقت الإنارة بالطور (Phase -> Minuterie Borne L)',
+      pass: phaseToMin,
+      desc: phaseToMin ? 'سلك الطور متصل بالطرف L لمؤقت الإنارة' : 'يجب تغذية الطرف L لمؤقت الإنارة بسلك الطور (Phase)'
+    });
+
+    // 2. Minuterie Neutral Supply (Neutre -> MIN:N)
+    const minNId = this.cm.getTerminalById('min_N') ? 'min_N' : 'min1_N';
+    const neutreToMin = this.pathExists('q1_N', minNId, rawGraph);
+    report.checks.push({
+      label: 'محايد مؤقت الإنارة (Neutre -> Minuterie Borne N)',
+      pass: neutreToMin,
+      desc: neutreToMin ? 'المحايد متصل بالطرف N لتغذية محرك/إلكترونيات المؤقت' : 'يجب وصل المحايد N لتغذية المؤقت'
+    });
+
+    // 3. Phase to all Push Buttons (q1_L -> bp1_L, bp2_L, bp3_L)
+    const phaseToBP1 = this.pathExists('q1_L', 'bp1_L', rawGraph);
+    const phaseToBP2 = this.pathExists('q1_L', 'bp2_L', rawGraph) || this.pathExists('bp1_L', 'bp2_L', rawGraph);
+    const phaseToBP3 = this.pathExists('q1_L', 'bp3_L', rawGraph) || this.pathExists('bp2_L', 'bp3_L', rawGraph);
+    const allButtonsPhase = phaseToBP1 && phaseToBP2 && phaseToBP3;
+    report.checks.push({
+      label: 'تغذية الأزرار الضاغطة بالطور (Phase -> BP1, BP2, BP3)',
+      pass: allButtonsPhase,
+      desc: allButtonsPhase ? 'الطور متصل بجميع الأزرار الضاغطة بالتسلسل والتفرع' : 'تأكد من تغذية مدخل كل زر ضاغط بالطور'
+    });
+
+    // 4. Push Buttons Return to Minuterie Control Terminal (Borne 4 or 3)
+    const minCtrlId = this.cm.getTerminalById('min_4') ? 'min_4' : (this.cm.getTerminalById('min1_4') ? 'min1_4' : 'min_3');
+    const minCtrlAltId = this.cm.getTerminalById('min_3') ? 'min_3' : 'min1_3';
+    const bp1ToCtrl = this.pathExists('bp1_out', minCtrlId, rawGraph) || this.pathExists('bp1_out', minCtrlAltId, rawGraph) || this.pathExists('bp2_out', minCtrlId, rawGraph);
+    const bp2ToCtrl = this.pathExists('bp2_out', minCtrlId, rawGraph) || this.pathExists('bp2_out', minCtrlAltId, rawGraph) || this.pathExists('bp1_out', 'bp2_out', rawGraph);
+    const bp3ToCtrl = this.pathExists('bp3_out', minCtrlId, rawGraph) || this.pathExists('bp3_out', minCtrlAltId, rawGraph) || this.pathExists('bp2_out', 'bp3_out', rawGraph) || this.pathExists('bp1_out', 'bp3_out', rawGraph);
+    const allButtonsControl = bp1ToCtrl && bp2ToCtrl && bp3ToCtrl;
+    report.checks.push({
+      label: 'خط التحكم من الأزرار للمؤقت (BP1, BP2, BP3 -> Borne 4)',
+      pass: allButtonsControl,
+      desc: allButtonsControl ? 'مخارج الأزرار الثلاثة مربوطة على التوازي بمدخل التحكم بالمؤقت' : 'يجب ربط مخارج الأزرار بالتوازي مع مدخل التحكم بالمؤقت (Borne 4)'
+    });
+
+    // 5. Minuterie Output to Lamps (Borne 3 or 4 -> E1_L, E2_L)
+    const minLampId = this.cm.getTerminalById('min_3') ? 'min_3' : (this.cm.getTerminalById('min1_3') ? 'min1_3' : 'min_4');
+    const minLampAltId = this.cm.getTerminalById('min_4') ? 'min_4' : 'min1_4';
+    const minToLamps = (this.pathExists(minLampId, 'e1_L', rawGraph) || this.pathExists(minLampAltId, 'e1_L', rawGraph)) &&
+      (this.pathExists(minLampId, 'e2_L', rawGraph) || this.pathExists(minLampAltId, 'e2_L', rawGraph) || this.pathExists('e1_L', 'e2_L', rawGraph));
+    report.checks.push({
+      label: 'مخرج القدرة المؤقت للمصابيح (Sortie 3 -> E1 & E2)',
+      pass: minToLamps,
+      desc: minToLamps ? 'مخرج المؤقت 3 يغذي مصابيح الإنارة بالتفرع' : 'يجب توصيل مخرج المؤقت (Borne 3) بمدخل المصابيح'
+    });
+
+    // 6. Neutral to Lamps (q1_N -> E1_N, E2_N)
+    const neutreToLamps = this.pathExists('q1_N', 'e1_N', rawGraph) &&
+      (this.pathExists('q1_N', 'e2_N', rawGraph) || this.pathExists('e1_N', 'e2_N', rawGraph));
+    report.checks.push({
+      label: 'محايد المصابيح (Neutre -> E1 & E2)',
+      pass: neutreToLamps,
+      desc: neutreToLamps ? 'المحايد متصل بجميع المصابيح' : 'يجب توصيل المحايد N بالمصابيح'
+    });
+
+    // 7. Earth PE to Lamps (q1_PE -> E1_PE, E2_PE)
+    const terreToLamps = this.pathExists('q1_PE', 'e1_PE', rawGraph) &&
+      (this.pathExists('q1_PE', 'e2_PE', rawGraph) || this.pathExists('e1_PE', 'e2_PE', rawGraph));
+    report.checks.push({
+      label: 'سلك التأريض الوقائي للمصابيح (Terre PE -> E1 & E2)',
+      pass: terreToLamps,
+      desc: terreToLamps ? 'التأريض PE متصل بهياكل المصابيح (مطابق لمعيار NFC 15-100)' : 'يرجى ربط سلك التأريض الوقائي PE بالمصابيح'
+    });
+
+    this.auditWireColors(report);
+
+    const allPassed = report.checks.every(c => c.pass);
+    const colorsValid = report.colorWarnings.length === 0;
+    report.isValid = allPassed && colorsValid;
+    report.status = report.isValid ? 'success' : 'error';
+
+    if (report.isValid) {
+      report.generalMessageAr = '✅ دارة مؤقت الإنارة (Minuterie Schneider 15363) مكتملة ومطابقة 100% لمعيار NFC 15-100!';
+      report.generalMessageFr = 'Montage Minuterie 4 fils conforme et fonctionnel !';
+      if (window.soundEngine) window.soundEngine.playSuccessChime();
+    } else {
+      report.generalMessageAr = '❌ توجد أخطاء أو نواقص في دارة مؤقت الإنارة. راجع قائمة الفحص أعلاه.';
+      report.generalMessageFr = 'Montage Minuterie incomplet ou non conforme.';
+    }
+  }
+
   // BUILD DYNAMIC CONNECTIVITY GRAPH
   buildConnectivityGraph(includeImpulse = true) {
     const adj = new Map();
@@ -593,6 +741,19 @@ class CircuitEngine {
           const t2 = comp.terminals && comp.terminals.find(t => t.code === '2');
           if (t1 && t2) addEdge(t1.id, t2.id);
           else addEdge('tl_1', 'tl_2');
+        }
+      } else if (comp.type === 'minuterie') {
+        const isClosed = (comp.state && (comp.state.mode === 'permanent' || comp.state.isClosed || comp.state.isTiming));
+        if (isClosed) {
+          const tL = comp.terminals && comp.terminals.find(t => t.code === 'L');
+          const t3 = comp.terminals && comp.terminals.find(t => t.code === '3');
+          const t4 = comp.terminals && comp.terminals.find(t => t.code === '4');
+          const lId = tL ? tL.id : (this.cm.getTerminalById('min_L') ? 'min_L' : `${comp.id}_L`);
+          const t3Id = t3 ? t3.id : (this.cm.getTerminalById('min_3') ? 'min_3' : `${comp.id}_3`);
+          const t4Id = t4 ? t4.id : (this.cm.getTerminalById('min_4') ? 'min_4' : `${comp.id}_4`);
+          // Internal contact connects Phase L to output terminals
+          addEdge(lId, t3Id);
+          addEdge(lId, t4Id);
         }
       } else if (comp.type === 'push_button' && includeImpulse && comp.state && comp.state.isPressed) {
         const tL = comp.terminals && comp.terminals.find(t => t.code === 'L');
@@ -747,6 +908,36 @@ class CircuitEngine {
         this.addSolutionWire('q1_N', 'e1_N', '#2563eb', 'neutre');
         this.addSolutionWire('e1_N', 'e2_N', '#2563eb', 'neutre');
         this.addSolutionWire('q1_PE', 'e1_PE', '#16a34a', 'terre');
+        break;
+
+      case 'MIN':
+        // 1. Phase from Q1 to Minuterie Borne L
+        this.addSolutionWire('q1_L', 'min_L', '#dc2626', 'phase');
+
+        // 2. Phase from Q1 to BP1:L, and bridge to BP2:L, BP3:L
+        this.addSolutionWire('q1_L', 'bp1_L', '#dc2626', 'phase');
+        this.addSolutionWire('bp1_L', 'bp2_L', '#dc2626', 'phase');
+        this.addSolutionWire('bp2_L', 'bp3_L', '#dc2626', 'phase');
+
+        // 3. Neutral from Q1 to Minuterie Borne N
+        this.addSolutionWire('q1_N', 'min_N', '#2563eb', 'neutre');
+
+        // 4. Push-buttons return to Minuterie Borne 4 (Retour Boutons ⭳)
+        this.addSolutionWire('bp1_out', 'min_4', '#ea580c', 'navette');
+        this.addSolutionWire('bp2_out', 'bp1_out', '#ea580c', 'navette');
+        this.addSolutionWire('bp3_out', 'bp2_out', '#ea580c', 'navette');
+
+        // 5. Minuterie output Borne 3 to Lamp E1:L, and bridge to E2:L
+        this.addSolutionWire('min_3', 'e1_L', '#18181b', 'retour');
+        this.addSolutionWire('e1_L', 'e2_L', '#18181b', 'retour');
+
+        // 6. Neutral from Q1 to Lamp E1:N, and bridge to E2:N
+        this.addSolutionWire('q1_N', 'e1_N', '#2563eb', 'neutre');
+        this.addSolutionWire('e1_N', 'e2_N', '#2563eb', 'neutre');
+
+        // 7. Earth from Q1 to Lamp E1:PE, and bridge to E2:PE
+        this.addSolutionWire('q1_PE', 'e1_PE', '#16a34a', 'terre');
+        this.addSolutionWire('e1_PE', 'e2_PE', '#16a34a', 'terre');
         break;
     }
   }

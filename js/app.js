@@ -842,6 +842,10 @@ class SimulatorApp {
         titleEl.textContent = '4. المرحل النبضي (Télérupteur 4 Fils) - 3 أزرار ضاغطة ومصابيح متوازية';
         descEl.textContent = 'التحكم بالإنارة من 3 مواضع عبر أزرار ضاغطة (BP1, BP2, BP3) موصولة على التوازي بالوشيعة A1-A2 مع مصابيح بالتسلسل.';
         break;
+      case 'MIN':
+        titleEl.textContent = '5. مؤقت الإنارة (Minuterie Schneider 15363) - إنارة السلالم 4 أسلاك';
+        descEl.textContent = 'مؤقت إنارة أوتوماتيكي قابل للتعديل (0.5 إلى 6.5 دقيقة) مع مفتاح تحويل للإنارة المستمرة (☼) والتحكم عبر 3 أزرار ضاغطة ومصباحين وفق معيار NFC 15-100.';
+        break;
       default:
         titleEl.textContent = 'تركيب كهربائي مخصص (Circuit Personnalisé)';
         descEl.textContent = 'لوحة عمل حرة تمكنك من إضافة وتعديل وتحريك وحذف المكونات وتوصيلها بحرية تامة.';

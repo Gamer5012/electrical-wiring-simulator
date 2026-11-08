@@ -428,6 +428,111 @@
         ]
       }
     },
+    {
+      id: 'build_min',
+      type: 'build',
+      circuitMode: 'MIN',
+      vvVariant: 'FR',
+      titleAr: 'تركيب مؤقت إنارة السلالم 4 أسلاك (Minuterie Schneider 15363)',
+      titleFr: 'Montage Minuterie 4 Fils pour Cage d\'escalier (Schneider 15363)',
+      categoryAr: 'التحكم المتقدم والمؤقتات',
+      categoryFr: 'Minuteries et Temporisations',
+      difficulty: 'hard',
+      difficultyAr: 'متقدم',
+      durationMinutes: 15,
+      passingScore: 60,
+      descriptionAr: 'المطلوب إنجاز دارة مؤقت إنارة السلالم 4 أسلاك (Minuterie Schneider 15363) وفق معيار NFC 15-100: تغذية المؤقت (L-N)، تجميع مخارج 3 أزرار ضاغطة على التوازي نحو مدخل التحكم (Borne 4)، وتوصيل مخرج القدرة (Borne 3) لتغذية مصباحين متوازيين (E1, E2).',
+      descriptionFr: 'Réaliser le câblage d\'une minuterie d\'escalier Schneider 15363 selon la norme NFC 15-100 : Alimentation L-N, 3 boutons poussoirs en parallèle sur borne 4, sortie puissance borne 3 alimentant les lampes E1 et E2.',
+      tasksAr: [
+        'توصيل سلك الطور (q1_L) إلى مدخل التغذية L بمؤقت الإنارة وللأزرار الضاغطة (bp1_L, bp2_L, bp3_L).',
+        'توصيل السلك المحايد (q1_N) إلى طرف التغذية N بمؤقت الإنارة لتشغيل إلكترونيات ومحرك التوقيت.',
+        'تجميع مخارج الأزرار الضاغطة (bp_out) على التوازي وربطها بمدخل التحكم بالمؤقت (Borne 4).',
+        'توصيل مخرج القدرة المؤقت (Borne 3) إلى مدخل الطور بالمصابيح (E1_L ثم تسلسله إلى E2_L).',
+        'توصيل المحايد والأرضي الوقائي PE للمصابيح بالتسلسل وفق المعايير.'
+      ],
+      requirements: {
+        phaseSource: 'q1_L',
+        neutralSource: 'q1_N',
+        earthSource: 'q1_PE',
+        connections: [
+          {
+            id: 'c_phase_min_l',
+            nameAr: 'تغذية مؤقت الإنارة بالطور (Borne L)',
+            nameFr: 'Alimentation Phase Minuterie (min_L)',
+            from: 'q1_L',
+            to: 'min_L',
+            role: 'phase',
+            allowedColors: ['#dc2626', '#e11d48'],
+            points: 8
+          },
+          {
+            id: 'c_neutral_min_n',
+            nameAr: 'تغذية مؤقت الإنارة بالمحايد (Borne N)',
+            nameFr: 'Alimentation Neutre Minuterie (min_N)',
+            from: 'q1_N',
+            to: 'min_N',
+            role: 'neutre',
+            allowedColors: ['#2563eb', '#1d4ed8'],
+            points: 8
+          },
+          {
+            id: 'c_phase_bp_chain',
+            nameAr: 'تغذية الأزرار الضاغطة الثلاثة بالطور',
+            nameFr: 'Distribution Phase vers BP1, BP2, BP3',
+            customCheck: 'checkPhaseToButtons',
+            requiredNodes: ['bp1_L', 'bp2_L', 'bp3_L'],
+            sourceNode: 'q1_L',
+            role: 'phase',
+            allowedColors: ['#dc2626', '#e11d48'],
+            points: 14
+          },
+          {
+            id: 'c_buttons_to_min_ctrl',
+            nameAr: 'ربط مخارج الأزرار بمدخل التحكم (Borne 4)',
+            nameFr: 'Retour Boutons Poussoirs vers Borne 4',
+            customCheck: 'checkButtonsToCoilA1',
+            buttonOutputs: ['bp1_out', 'bp2_out', 'bp3_out'],
+            targetNode: 'min_4',
+            targetNodeAlt: 'min_3',
+            role: 'navette',
+            allowedColors: ['#ea580c', '#c2410c', '#f97316'],
+            points: 16
+          },
+          {
+            id: 'c_min_output_to_lamps',
+            nameAr: 'مخرج القدرة للمصابيح (Borne 3 -> E1 & E2)',
+            nameFr: 'Sortie Contact Lampes (min_3 -> E1, E2)',
+            from: 'min_3',
+            to: 'e1_L',
+            role: 'retour',
+            allowedColors: ['#18181b', '#27272a', '#78350f'],
+            points: 12
+          },
+          {
+            id: 'c_neutral_lamps',
+            nameAr: 'توصيل المحايد للمصابيح بالتسلسل (E1, E2)',
+            nameFr: 'Distribution Neutre vers Lampes E1, E2',
+            customCheck: 'checkNeutralChainingAll',
+            requiredNodes: ['e1_N', 'e2_N'],
+            sourceNode: 'q1_N',
+            role: 'neutre',
+            allowedColors: ['#2563eb', '#1d4ed8'],
+            points: 6
+          },
+          {
+            id: 'c_earth_lamps',
+            nameAr: 'توصيل التأريض الوقائي PE للمصابيح',
+            nameFr: 'Protection Terre PE vers Lampes',
+            customCheck: 'checkEarthChainingAll',
+            requiredNodes: ['e1_PE', 'e2_PE'],
+            sourceNode: 'q1_PE',
+            role: 'terre',
+            allowedColors: ['#16a34a', '#15803d'],
+            points: 6
+          }
+        ]
+      }
+    },
 
     // ------------------------------------------
     // TYPE B: FAULT FINDING & TROUBLESHOOTING
@@ -644,6 +749,63 @@
         app.wr.addWire(app.cm.getTerminalById('e1_PE'), app.cm.getTerminalById('e2_PE'), '#16a34a', 'terre');
       },
       expectedTargetExerciseId: 'build_tl'
+    },
+    {
+      id: 'fault_min_supply_control',
+      type: 'fault',
+      circuitMode: 'MIN',
+      vvVariant: 'FR',
+      expectedTargetExerciseId: 'build_min',
+      titleAr: 'عطل مؤقت السلالم: المحايد مقطوع والزر BP3 مفصول التغذية',
+      titleFr: 'Dépannage Minuterie Schneider 15363 : Neutre Déconnecté & BP3 Isolé',
+      categoryAr: 'تشخيص الأعطال والتصحيح',
+      categoryFr: 'Diagnostic et Maintenance',
+      difficulty: 'hard',
+      difficultyAr: 'متقدم',
+      durationMinutes: 15,
+      passingScore: 60,
+      descriptionAr: 'مؤقت الإنارة لا يستجيب إطلاقاً لأي زر ضاغط بسبب انقطاع سلك المحايد عن طرف التغذية N لمؤقت Schneider 15363، كما أن الزر BP3 في الطابق الثاني مفصول عن خط الطور. قم بتشخيص وإصلاح العطلين.',
+      descriptionFr: 'La minuterie ne réagit pas car le neutre est absent de la borne N, et le bouton poussoir BP3 est déconnecté de la phase.',
+      tasksAr: [
+        'افحص تغذية مؤقت الإنارة وتأكد من اتصال السلك المحايد بطرف التغذية N.',
+        'افحص تغذية الأزرار الضاغطة وتأكد من وصول الطور إلى مدخل الزر BP3.',
+        'افحص ربط مخارج الأزرار ومخرج القدرة بالمصابيح وتأكد من عمل المؤقت والمصابيح.'
+      ],
+      initialFaults: [
+        {
+          faultId: 'f_missing_timer_neutral',
+          descriptionAr: 'انقطاع السلك المحايد عن طرف تغذية مؤقت الإنارة min_N',
+          descriptionFr: 'Neutre non raccordé à la borne N de la minuterie'
+        },
+        {
+          faultId: 'f_bp3_isolated',
+          descriptionAr: 'الزر الضاغط BP3 مفصول عن تغذية الطور L',
+          descriptionFr: 'Bouton BP3 non alimenté en Phase'
+        }
+      ],
+      baselineSetup: (app) => {
+        app.wr.clear();
+        // Phase to Minuterie L
+        app.wr.addWire(app.cm.getTerminalById('q1_L'), app.cm.getTerminalById('min_L'), '#dc2626', 'phase');
+        // Phase to BP1 and BP2 only (BP3 isolated!)
+        app.wr.addWire(app.cm.getTerminalById('q1_L'), app.cm.getTerminalById('bp1_L'), '#dc2626', 'phase');
+        app.wr.addWire(app.cm.getTerminalById('bp1_L'), app.cm.getTerminalById('bp2_L'), '#dc2626', 'phase');
+        // min_N has NO NEUTRAL (Fault 1!)
+        // Push buttons output to Minuterie Borne 4
+        app.wr.addWire(app.cm.getTerminalById('bp1_out'), app.cm.getTerminalById('min_4'), '#ea580c', 'navette');
+        app.wr.addWire(app.cm.getTerminalById('bp2_out'), app.cm.getTerminalById('bp1_out'), '#ea580c', 'navette');
+        app.wr.addWire(app.cm.getTerminalById('bp3_out'), app.cm.getTerminalById('bp2_out'), '#ea580c', 'navette');
+        // Minuterie output 3 to Lamps E1 & E2
+        app.wr.addWire(app.cm.getTerminalById('min_3'), app.cm.getTerminalById('e1_L'), '#18181b', 'retour');
+        app.wr.addWire(app.cm.getTerminalById('e1_L'), app.cm.getTerminalById('e2_L'), '#18181b', 'retour');
+        // Neutral to lamps
+        app.wr.addWire(app.cm.getTerminalById('q1_N'), app.cm.getTerminalById('e1_N'), '#2563eb', 'neutre');
+        app.wr.addWire(app.cm.getTerminalById('e1_N'), app.cm.getTerminalById('e2_N'), '#2563eb', 'neutre');
+        // Earth to lamps
+        app.wr.addWire(app.cm.getTerminalById('q1_PE'), app.cm.getTerminalById('e1_PE'), '#16a34a', 'terre');
+        app.wr.addWire(app.cm.getTerminalById('e1_PE'), app.cm.getTerminalById('e2_PE'), '#16a34a', 'terre');
+      },
+      expectedTargetExerciseId: 'build_min'
     }
   ];
 
@@ -869,15 +1031,16 @@
             detailMessage = `انقطاع الطور عن الأزرار: ${missing.join(', ')}`;
           }
         } else if (req.customCheck === 'checkButtonsToCoilA1') {
-          // Check if all button outputs reach coil terminal tl_A1
+          // Check if all button outputs reach control terminal (tl_A1 or min_4 / min_3)
           const target = req.targetNode || 'tl_A1';
+          const targetAlt = req.targetNodeAlt;
           const buttons = req.buttonOutputs || [];
-          const missing = buttons.filter(b => !this.isPhysicallyConnected(b, target, wireGraph));
+          const missing = buttons.filter(b => !this.isPhysicallyConnected(b, target, wireGraph) && !(targetAlt && this.isPhysicallyConnected(b, targetAlt, wireGraph)));
           if (missing.length === 0 && buttons.length > 0) {
             isSatisfied = true;
-            detailMessage = 'مخارج جميع الأزرار متصلة بملف المرحل A1 على التوازي';
+            detailMessage = 'مخارج جميع الأزرار متصلة بمدخل التحكم على التوازي';
           } else {
-            detailMessage = `أزرار غير متصلة بالملف A1: ${missing.join(', ')}`;
+            detailMessage = `أزرار غير متصلة بمدخل التحكم: ${missing.join(', ')}`;
           }
         } else if (req.alternatives && req.alternatives.length > 0) {
           // Alternative paths check
