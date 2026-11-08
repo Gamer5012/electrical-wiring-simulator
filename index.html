@@ -144,6 +144,12 @@
         <i class="fa-solid fa-clock"></i>
         <span>4. المرحل النبضي (Télérupteur 4 Fils - 3 أزرار)</span>
       </button>
+
+      <!-- 5. PROMINENT EXAM MODE TAB -->
+      <button id="tabNavExamMode" class="btn-action px-3.5 py-2 rounded-lg text-xs font-black flex items-center gap-2 whitespace-nowrap bg-gradient-to-r from-amber-500 via-rose-500 to-red-600 hover:from-amber-400 hover:to-red-500 text-white shadow-lg shadow-rose-600/40 border border-rose-400/50 transition">
+        <i class="fa-solid fa-graduation-cap text-yellow-200 text-sm animate-pulse"></i>
+        <span>🎯 5. وضع الامتحان المهني (Mode Examen NFC 15-100)</span>
+      </button>
     </div>
   </nav>
 
@@ -267,6 +273,39 @@
 
   <!-- MAIN CONTAINER -->
   <main class="max-w-7xl mx-auto w-full p-4 flex-1 flex flex-col gap-4">
+
+    <!-- MODE SWITCHER TOGGLE BAR: TRAINING vs EXAM -->
+    <div class="bg-slate-900 border border-slate-800 rounded-xl p-2.5 flex items-center justify-between gap-3 flex-wrap shadow-lg">
+      <div class="flex items-center gap-2 flex-wrap">
+        <span class="text-xs font-black text-amber-400 ml-1 flex items-center gap-1.5">
+          <i class="fa-solid fa-sliders"></i>
+          <span>النمط النشط:</span>
+        </span>
+        <div class="flex items-center gap-1.5 bg-slate-950 p-1 rounded-xl border border-slate-800">
+          <button id="btnSwitchToTraining" class="px-3.5 py-1.5 rounded-lg text-xs font-bold bg-blue-600 text-white shadow flex items-center gap-1.5 transition">
+            <i class="fa-solid fa-graduation-cap text-sky-300"></i>
+            <span>🛠️ نمط التعلّم والتدريب الحر</span>
+          </button>
+          <button id="btnSwitchToExam" class="px-3.5 py-1.5 rounded-lg text-xs font-bold bg-slate-900 text-slate-300 hover:text-white hover:bg-slate-800 flex items-center gap-1.5 transition border border-transparent hover:border-slate-700">
+            <i class="fa-solid fa-award text-amber-400"></i>
+            <span>🎯 نمط الامتحان والتقييم الصارم (100 نقطة)</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-3 text-xs text-slate-400">
+        <button id="btnDirectOpenHistory" class="text-amber-400 hover:text-amber-300 font-bold flex items-center gap-1 text-xs">
+          <i class="fa-solid fa-clock-rotate-left"></i>
+          <span>سجل الامتحانات</span>
+        </button>
+        <span class="text-slate-700">|</span>
+        <span class="text-[11px] text-slate-400 hidden sm:inline">
+          <i class="fa-solid fa-shield-halved text-emerald-400 ml-1"></i>
+          تقييم مستقل وتأخير التصحيح وفق معايير NFC 15-100
+        </span>
+      </div>
+    </div>
+
 
     <!-- Active Mode Description Banner -->
     <div class="bg-slate-900 border border-slate-800 rounded-xl p-3 flex flex-wrap items-center justify-between gap-3">

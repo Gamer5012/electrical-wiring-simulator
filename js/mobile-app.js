@@ -662,6 +662,15 @@ class MobileSimulatorApp {
     this.examManager.onTimerTick = (rem, tot) => this.updateMobileExamTimer(rem, tot);
     this.examManager.onTimerExpired = () => this.autoSubmitMobileExam();
 
+    // 5th Pill Navigation in Mobile Nav
+    const pillNavExam = document.getElementById('pillNavMobileExam');
+    if (pillNavExam) {
+      pillNavExam.addEventListener('click', () => {
+        this.triggerHaptic(20);
+        this.openMobileExamSelection();
+      });
+    }
+
     // Top Header Button: Open Exam
     const btnOpenExam = document.getElementById('btnMobileOpenExam');
     if (btnOpenExam) {

@@ -1048,6 +1048,40 @@ class SimulatorApp {
       this.autoSubmitExam();
     };
 
+    // Prominent Nav 5th Tab
+    const tabNavExam = document.getElementById('tabNavExamMode');
+    if (tabNavExam) {
+      tabNavExam.addEventListener('click', () => {
+        this.openExamSelectionModal();
+      });
+    }
+
+    // Prominent Mode Switcher Toggle
+    const btnSwitchExam = document.getElementById('btnSwitchToExam');
+    if (btnSwitchExam) {
+      btnSwitchExam.addEventListener('click', () => {
+        this.openExamSelectionModal();
+      });
+    }
+
+    const btnSwitchTrain = document.getElementById('btnSwitchToTraining');
+    if (btnSwitchTrain) {
+      btnSwitchTrain.addEventListener('click', () => {
+        if (this.examManager && this.examManager.isExamActive && !this.examManager.isExamSubmitted) {
+          this.showToast('أنت حالياً داخل امتحان نشط! سلّم أو ألغِ الامتحان للعودة للتدريب.', 'warning');
+        } else {
+          this.showToast('أنت حالياً في نمط التدريب الحر', 'info');
+        }
+      });
+    }
+
+    const btnDirectHist = document.getElementById('btnDirectOpenHistory');
+    if (btnDirectHist) {
+      btnDirectHist.addEventListener('click', () => {
+        this.openExamHistoryModal();
+      });
+    }
+
     // Header Button: Open Exam Modal
     const btnOpenExam = document.getElementById('btnOpenExamModal');
     if (btnOpenExam) {
